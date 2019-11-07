@@ -5,38 +5,37 @@
  */
 
 describe("maasActionButton", function() {
-
   // Load the MAAS module.
-  beforeEach(module("MAAS"));
+  beforeEach(angular.mock.module("MAAS"));
 
   // Create a new scope before each test. Not used in this test, but
   // required to compile the directive.
   var $scope;
   beforeEach(inject(function($rootScope) {
-      $scope = $rootScope.$new();
+    $scope = $rootScope.$new();
   }));
 
   // Return the compiled directive with the items from the scope.
   function compileDirective(scope) {
-      var directive;
-      var html = [
-        '<div>',
-          '<maas-action-button ',
-            'indeterminate-state=' + scope.indeterminateState + ' ',
-            'done-state=' + scope.doneState + '>',
-            'Action',
-          '</maas-action-button>',
-        '</div>'
-      ].join('');
+    var directive;
+    var html = [
+      "<div>",
+      "<maas-action-button ",
+      "indeterminate-state=" + scope.indeterminateState + " ",
+      "done-state=" + scope.doneState + ">",
+      "Action",
+      "</maas-action-button>",
+      "</div>"
+    ].join("");
 
-      // Compile the directive.
-      inject(function($compile) {
-          directive = $compile(html)($scope);
-      });
+    // Compile the directive.
+    inject(function($compile) {
+      directive = $compile(html)($scope);
+    });
 
-      // Perform the digest cycle to finish the compile.
-      $scope.$digest();
-      return directive.find(".p-action-button");
+    // Perform the digest cycle to finish the compile.
+    $scope.$digest();
+    return directive.find(".p-action-button");
   }
 
   it("does not have any state classes by default", function() {

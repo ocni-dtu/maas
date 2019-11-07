@@ -11,26 +11,16 @@ __all__ = [
 ]
 
 from datetime import timedelta
-from itertools import (
-    chain,
-    islice,
-)
 import json
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from maasserver import (
-    exceptions,
-    ntp,
-)
+from django.db.models import F, Q
+from maasserver import exceptions, ntp
 from maasserver.api.utils import get_overridden_query_dict
 from maasserver.enum import NODE_STATUS
 from maasserver.forms import AdminMachineWithMACAddressesForm
-from maasserver.models import (
-    Node,
-    PhysicalInterface,
-    RackController,
-)
+from maasserver.models import Node, PhysicalInterface, RackController
 from maasserver.models.timestampedmodel import now
 from maasserver.utils.orm import transactional
 from provisioningserver.drivers.power.registry import PowerDriverRegistry
@@ -61,7 +51,7 @@ def mark_node_failed(system_id, error_description):
         raise NodeStateViolation(e)
 
 
-def _gen_cluster_nodes_power_parameters(nodes):
+def _gen_cluster_nodes_power_parameters(nodes, limit):
     """Generate power parameters for `nodes`.
 
     These fulfil a subset of the return schema for the RPC call for
@@ -71,37 +61,28 @@ def _gen_cluster_nodes_power_parameters(nodes):
     """
     five_minutes_ago = now() - timedelta(minutes=5)
     queryable_power_types = [
-        driver.name
-        for _, driver in PowerDriverRegistry
-        if driver.queryable
+        driver.name for _, driver in PowerDriverRegistry if driver.queryable
     ]
 
-    nodes_unchecked = (
-        nodes
-        .filter(power_state_queried=None)
+    qs = (
+        nodes.exclude(status=NODE_STATUS.BROKEN)
         .filter(bmc__power_type__in=queryable_power_types)
-        .exclude(status=NODE_STATUS.BROKEN)
+        .filter(
+            Q(power_state_queried=None)
+            | Q(power_state_queried__lte=five_minutes_ago)
+        )
+        .order_by(F("power_state_queried").asc(nulls_first=True), "system_id")
         .distinct()
     )
-    nodes_checked = (
-        nodes
-        .exclude(power_state_queried=None)
-        .exclude(power_state_queried__gt=five_minutes_ago)
-        .filter(bmc__power_type__in=queryable_power_types)
-        .exclude(status=NODE_STATUS.BROKEN)
-        .order_by("power_state_queried", "system_id")
-        .distinct()
-    )
-
-    for node in chain(nodes_unchecked, nodes_checked):
+    for node in qs[:limit]:
         power_info = node.get_effective_power_info()
         if power_info.power_type is not None:
             yield {
-                'system_id': node.system_id,
-                'hostname': node.hostname,
-                'power_state': node.power_state,
-                'power_type': power_info.power_type,
-                'context': power_info.power_parameters,
+                "system_id": node.system_id,
+                "hostname": node.hostname,
+                "power_state": node.power_state,
+                "power_type": power_info.power_type,
+                "context": power_info.power_parameters,
             }
 
 
@@ -155,20 +136,17 @@ def list_cluster_nodes_power_parameters(system_id, limit=10):
 
     # Generate all the the power queries that will fit into the response.
     nodes = rack.get_bmc_accessible_nodes()
-    details = _gen_cluster_nodes_power_parameters(nodes)
-    details = islice(details, limit)  # ... but never more than `limit`.
+    details = _gen_cluster_nodes_power_parameters(nodes, limit)
     details = _gen_up_to_json_limit(details, 60 * (2 ** 10))  # 60kiB
     details = list(details)
 
     # Update the queried time on all of the nodes at once. So another
     # rack controller does not update them at the same time. This operation
     # is done on all nodes at the same time in one query.
-    system_ids = [
-        detail["system_id"]
-        for detail in details
-    ]
-    Node.objects.filter(
-        system_id__in=system_ids).update(power_state_queried=now())
+    system_ids = [detail["system_id"] for detail in details]
+    Node.objects.filter(system_id__in=system_ids).update(
+        power_state_queried=now()
+    )
 
     return details
 
@@ -190,8 +168,13 @@ def update_node_power_state(system_id, power_state):
 @synchronous
 @transactional
 def create_node(
-        architecture, power_type, power_parameters, mac_addresses, domain=None,
-        hostname=None):
+    architecture,
+    power_type,
+    power_parameters,
+    mac_addresses,
+    domain=None,
+    hostname=None,
+):
     """Create a new `Node` and return it.
 
     :param architecture: The architecture of the new node.
@@ -208,29 +191,30 @@ def create_node(
     nodes = Node.objects.filter(interface__mac_address__in=mac_addresses)
     if nodes.count() > 0:
         raise NodeAlreadyExists(
-            "One of the MACs %s is already in use by a node." %
-            mac_addresses)
+            "One of the MACs %s is already in use by a node." % mac_addresses
+        )
 
     # It is possible that the enlistment code did not provide a subarchitecture
     # for the give architecture; assume 'generic'.
-    if '/' not in architecture:
-        architecture = '%s/generic' % architecture
+    if "/" not in architecture:
+        architecture = "%s/generic" % architecture
 
     data = {
-        'power_type': power_type,
-        'power_parameters': power_parameters,
-        'architecture': architecture,
-        'mac_addresses': mac_addresses,
+        "power_type": power_type,
+        "power_parameters": power_parameters,
+        "architecture": architecture,
+        "mac_addresses": mac_addresses,
     }
 
     if domain is not None:
-        data['domain'] = domain
+        data["domain"] = domain
 
     if hostname is not None:
-        data['hostname'] = hostname.strip()
+        data["hostname"] = hostname.strip()
 
     data_query_dict = get_overridden_query_dict(
-        {}, data, AdminMachineWithMACAddressesForm.Meta.fields)
+        {}, data, AdminMachineWithMACAddressesForm.Meta.fields
+    )
     form = AdminMachineWithMACAddressesForm(data_query_dict)
     if form.is_valid():
         node = form.save()
@@ -252,8 +236,7 @@ def commission_node(system_id, user):
     except Node.DoesNotExist:
         raise NoSuchNode.from_system_id(system_id)
     try:
-        node.start_commissioning(
-            User.objects.get(username=user))
+        node.start_commissioning(User.objects.get(username=user))
     except Exception as e:
         # Cluster takes care of logging
         raise CommissionNodeFailed(e)

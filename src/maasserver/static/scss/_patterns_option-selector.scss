@@ -3,23 +3,23 @@
   // A lot of the styling below clashes with the design of the Storage dropdown.
   // To avoid changing the markup and causing potential merge conflicts,
   // the parent selector is used (.p-table--pod-networking-config) to 'scope' the respective styles.
-  $icon-space: $sph-intra * 2 + map-get($icon-sizes, default);
+  $icon-space: $sph-inner * 2 + map-get($icon-sizes, default);
 
   .p-option-selector {
     position: relative;
 
     &__header {
       @extend %vf-clearfix;
-      padding-top: $spv-intra--condensed;
+      padding-top: $spv-inner--x-small;
 
       .p-button--close {
-        margin-left: $sph-intra--condensed;
-        float:none;
+        margin-left: $sph-inner--small;
+        float: none;
       }
     }
 
     &__title {
-      padding: $spv-intra--expanded $sph-intra 0;
+      padding: $spv-inner--medium $sph-inner 0;
     }
 
     &__input {
@@ -37,7 +37,7 @@
       border-color: $color-mid-light;
     }
 
-    .p-option-selector-subnets__options {
+    .p-option-selector__options--subnets {
       @media (min-width: $breakpoint-medium) {
         width: 70vw;
       }
@@ -48,7 +48,7 @@
     }
 
     .p-option-selector__options-key {
-      padding: 0 $sph-intra;
+      padding: 0 $sph-inner;
     }
 
     &__option {
@@ -63,7 +63,7 @@
       }
 
       &.is-over {
-        opacity: .5;
+        opacity: 0.5;
         pointer-events: none;
         cursor: not-allowed;
       }
@@ -87,12 +87,12 @@
     @extend %vf-pseudo-border--top;
     background-color: $color-light-new;
     .p-table--pod-networking-config & {
-      left: $sph-intra;
-      right: $sph-intra;
+      left: $sph-inner;
+      right: $sph-inner;
     }
     .p-table--pod-storage-config & {
       left: $icon-space;
-      right: $sph-intra;
+      right: $sph-inner;
     }
   }
 
@@ -101,7 +101,7 @@
       &__options {
         position: absolute;
         top: 2.25rem;
-        padding: $sph-intra 0 0;
+        padding: $sph-inner 0 0;
         border: 1px solid $color-mid-light;
         border-radius: $border-radius;
         box-shadow: $box-shadow;
@@ -121,7 +121,7 @@
       }
 
       &__options-key {
-        padding: 0 $sph-intra;
+        padding: 0 $sph-inner;
       }
 
       &__option-cell {
@@ -165,6 +165,87 @@
           }
         }
       }
+    }
+  }
+
+  .p-option-selector--subnets {
+    position: relative;
+
+    .p-option-selector__options--subnets {
+      @extend %p-card--highlighted;
+      left: -45vw;
+      position: absolute;
+      width: 90vw;
+      z-index: 10;
+
+      @media (min-width: $breakpoint-small) {
+        left: -226%;
+        width: 450%;
+      }
+
+      @media (min-width: $breakpoint-large) {
+        left: 0;
+        right: -126%;
+        width: auto;
+      }
+    }
+
+    .p-option-selector__title--subnets {
+      @extend %muted-heading;
+      border-bottom: 1px solid $color-mid-light;
+      margin-bottom: 0;
+      padding-bottom: $spv-inner--x-small--scaleable;
+    }
+
+    .p-option-selector__option--subnets {
+      @include vf-focus;
+      cursor: pointer;
+
+      &:last-of-type {
+        margin-bottom: $spv-outer--scaleable;
+      }
+
+      &:not(:last-of-type) {
+        position: relative;
+
+        &::before {
+          background-color: $color-mid-x-light;
+          bottom: 0;
+          content: "";
+          height: 1px;
+          position: absolute;
+          width: 100%;
+        }
+      }
+
+      &:hover {
+        background-color: $color-light;
+      }
+    }
+
+    .p-option-selector__option-cell--subnets {
+      padding-bottom: $spv-inner--scaleable;
+      padding-top: $spv-inner--scaleable;
+
+      &:first-of-type {
+        padding-left: $sph-inner--small;
+      }
+
+      &:last-of-type {
+        padding-right: $sph-inner--small;
+      }
+
+      &:nth-of-type(2) {
+        @media (max-width: $breakpoint-large) {
+          padding-left: $sph-inner--small;
+        }
+      }
+    }
+
+    .p-button--close {
+      position: absolute;
+      right: -#{$sph-inner--small};
+      top: $spv-inner--x-small--scaleable;
     }
   }
 
@@ -215,73 +296,56 @@
   }
 
   .p-table--pod-storage-config {
-    .p-option-selector {
-      &__options {
-        background-color: $color-x-light;
-        border-radius: $border-radius;
-        box-shadow: $box-shadow;
-        position: absolute;
-        top: 2.25rem;
-        width: 100vw;
-        z-index: 10;
+    .p-option-selector__header {
+      display: flex;
+      justify-content: space-between;
 
-        @media (min-width: $breakpoint-small) {
-          width: 70vw;
-        }
-        @media (min-width: $breakpoint-medium) {
-          width: 70vw;
-        }
-        @media (min-width: $breakpoint-large) {
-          width: 750px;
+      &::after {
+        content: none;
+      }
+    }
+
+    .p-option-selector__options {
+      background-color: $color-x-light;
+      border-radius: $border-radius;
+      box-shadow: $box-shadow;
+      position: absolute;
+      top: 2.25rem;
+      width: 200%;
+      z-index: 10;
+    }
+
+    .p-option-selector__option {
+      display: grid;
+
+      &.is-selected {
+        background-position: $sph-inner $sp-large;
+      }
+    }
+
+    .p-option-selector__options-key {
+      padding: 0 $sph-inner;
+    }
+
+    .p-option-selector__option-cell {
+      padding: 0 $sph-inner 0 0;
+
+      &:first-of-type {
+        padding-left: $sp-xxx-large;
+      }
+
+      &:last-of-type {
+        padding-left: $sph-inner;
+
+        @media only screen and (min-width: $breakpoint-medium) {
+          padding-left: 0;
         }
       }
 
-      &__options-key {
-        padding: 0 $sph-intra;
-      }
-
-      &__option-cell {
-        padding: 0 $sph-intra 0 0;
-
-        &:first-child {
-          padding-left: $icon-space;
-
-          width: 70%;
-
-          @media (min-width: $breakpoint-medium) {
-            width: 35%;
-          }
-
-          @media (min-width: $breakpoint-large) {
-            width: 40%;
-          }
-        }
-
-        > * {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        &:nth-child(2) {
-          width: 30%;
-
-          @media (min-width: $breakpoint-medium) {
-            width: 20%;
-          }
-
-          @media (min-width: $breakpoint-large) {
-            width: 15%;
-          }
-        }
-
-        &:nth-child(3) {
-          width: 100%;
-
-          @media (min-width: $breakpoint-medium) {
-            width: 45%;
-          }
-        }
+      > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
   }
@@ -294,7 +358,7 @@
     float: left;
     font-size: 2rem;
     line-height: map-get($line-heights, default-text);
-    margin-right: $sph-intra--condensed;
+    margin-right: $sph-inner--small;
     padding-top: map-get($nudges, nudge--p);
     width: $sp-unit;
   }
@@ -302,7 +366,7 @@
 
 .p-key-icon--free {
   @extend %p-key-icon;
-  background-color: transparentize($color-link, .8);
+  background-color: transparentize($color-link, 0.8);
 }
 
 .p-key-icon--used {
@@ -317,5 +381,5 @@
 
 .p-key-icon--other {
   @extend %p-key-icon;
-  background-color: transparentize($color--request, .8);
+  background-color: transparentize($color--request, 0.8);
 }

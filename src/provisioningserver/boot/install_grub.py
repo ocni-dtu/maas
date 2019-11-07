@@ -3,10 +3,7 @@
 
 """Install a GRUB2 pre-boot loader config for TFTP download."""
 
-__all__ = [
-    "add_arguments",
-    "run",
-    ]
+__all__ = ["add_arguments", "run"]
 
 import os
 
@@ -18,11 +15,11 @@ CONFIG_FILE = """
 # MAAS GRUB2 pre-loader configuration file
 
 # Load based on MAC address first.
-configfile (pxe)/grub/grub.cfg-${net_default_mac}
+configfile /grub/grub.cfg-${net_default_mac}
 
 # Failed to load based on MAC address.
 # Load amd64 by default, UEFI only supported by 64-bit
-configfile (pxe)/grub/grub.cfg-default-amd64
+configfile /grub/grub.cfg-default-amd64
 """
 
 
@@ -37,5 +34,5 @@ def run(args):
     with ClusterConfiguration.open() as config:
         if not os.path.exists(config.grub_root):
             os.makedirs(config.grub_root)
-        destination_file = os.path.join(config.grub_root, 'grub.cfg')
+        destination_file = os.path.join(config.grub_root, "grub.cfg")
     write_text_file(destination_file, CONFIG_FILE)

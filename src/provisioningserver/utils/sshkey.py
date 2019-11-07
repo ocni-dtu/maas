@@ -3,33 +3,28 @@
 
 """Utilities for working with OpenSSH keys."""
 
-__all__ = [
-    "normalise_openssh_public_key",
-    "OpenSSHKeyError",
-]
+__all__ = ["normalise_openssh_public_key", "OpenSSHKeyError"]
 
 from itertools import chain
 import os
 from pathlib import Path
 import pipes
-from subprocess import (
-    CalledProcessError,
-    check_output,
-    PIPE,
-)
+from subprocess import CalledProcessError, check_output, PIPE
 from tempfile import TemporaryDirectory
 
 from provisioningserver.utils.shell import get_env_with_locale
 
 
-OPENSSH_PROTOCOL2_KEY_TYPES = frozenset((
-    "ecdsa-sha2-nistp256",
-    "ecdsa-sha2-nistp384",
-    "ecdsa-sha2-nistp521",
-    "ssh-dss",
-    "ssh-ed25519",
-    "ssh-rsa",
-))
+OPENSSH_PROTOCOL2_KEY_TYPES = frozenset(
+    (
+        "ecdsa-sha2-nistp256",
+        "ecdsa-sha2-nistp384",
+        "ecdsa-sha2-nistp521",
+        "ssh-dss",
+        "ssh-ed25519",
+        "ssh-rsa",
+    )
+)
 
 
 class OpenSSHKeyError(ValueError):
@@ -88,13 +83,9 @@ def normalise_openssh_public_key(keytext):
     2. Checks that keytype is one of “ssh-dss”, “ssh-rsa”, “ssh-ed25519”,
     “ecdsa-sha2-nistp256”, “ecdsa-sha2-nistp384”, or “ecdsa-sha2-nistp521”,
 
-    2. Run through `setsid -w ssh-keygen -e -f $keyfile > $intermediate <&-`.
+    2. Run through `ssh-keygen -e -f $keyfile > $intermediate <&-`.
 
-    3. Run through `setsid -w ssh-keygen -i -f $intermediate > $pubkey <&-`.
-
-    Note: setsid and <&- ensures ssh-keygen doesn't use the caller's TTY. This
-    is Python, and no recourse to a shell is being taken, but it has similar
-    behaviour.
+    3. Run through `ssh-keygen -i -f $intermediate > $pubkey <&-`.
 
     4. $pubkey should contain two fields: keytype, base64-encoded key.
 
@@ -111,14 +102,18 @@ def normalise_openssh_public_key(keytext):
     else:
         raise OpenSSHKeyError(
             "Key should contain 2 or more space separated parts (key type, "
-            "base64-encoded key, optional comments), not %d: %s" % (
-                len(parts), " ".join(map(pipes.quote, parts))))
+            "base64-encoded key, optional comments), not %d: %s"
+            % (len(parts), " ".join(map(pipes.quote, parts)))
+        )
 
     if keytype not in OPENSSH_PROTOCOL2_KEY_TYPES:
         raise OpenSSHKeyError(
-            "Key type %s not recognised; it should be one of: %s" % (
-                pipes.quote(keytype), " ".join(
-                    sorted(OPENSSH_PROTOCOL2_KEY_TYPES))))
+            "Key type %s not recognised; it should be one of: %s"
+            % (
+                pipes.quote(keytype),
+                " ".join(sorted(OPENSSH_PROTOCOL2_KEY_TYPES)),
+            )
+        )
 
     env = get_env_with_locale()
     # Request OpenSSH to use /bin/true when prompting for passwords. We also
@@ -136,25 +131,33 @@ def normalise_openssh_public_key(keytext):
         try:
             with open(os.devnull, "r") as devnull:
                 rfc4716key = check_output(
-                    ("setsid", "-w", "ssh-keygen", "-e", "-f", str(keypath)),
-                    stdin=devnull, stderr=PIPE, env=env)
+                    ("ssh-keygen", "-e", "-f", str(keypath)),
+                    stdin=devnull,
+                    stderr=PIPE,
+                    env=env,
+                )
         except CalledProcessError:
             raise OpenSSHKeyError(
-                "Key could not be converted to RFC4716 form.")
+                "Key could not be converted to RFC4716 form."
+            )
         # Convert RFC4716 back to OpenSSH format public key.
         keypath.write_bytes(rfc4716key)
         try:
             with open(os.devnull, "r") as devnull:
                 opensshkey = check_output(
-                    ("setsid", "-w", "ssh-keygen", "-i", "-f", str(keypath)),
-                    stdin=devnull, stderr=PIPE, env=env)
+                    ("ssh-keygen", "-i", "-f", str(keypath)),
+                    stdin=devnull,
+                    stderr=PIPE,
+                    env=env,
+                )
         except CalledProcessError:
             # If this happens it /might/ be an OpenSSH bug. If we've managed
             # to convert to RFC4716 form then it seems reasonable to assume
             # that OpenSSH has already given this key its blessing.
             raise OpenSSHKeyError(
                 "Key could not be converted from RFC4716 form to "
-                "OpenSSH public key form.")
+                "OpenSSH public key form."
+            )
         else:
             keytype, key = opensshkey.decode("utf-8").split()
 

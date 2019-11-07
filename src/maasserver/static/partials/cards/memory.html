@@ -1,7 +1,7 @@
-<header class="p-card__header">
+<header>
   <h2 class="p-heading--four">Memory</h3>
-  <h3 class="p-heading--four u-no-margin--top" data-ng-if="node.memory > 0"><strong>{$ node.memory $} GiB</strong></h2>
-  <h3 class="p-heading--four u-no-margin--top" data-ng-if="node.memory == 0"><strong>Unknown</strong></h2>
+  <h3 class="p-heading--four" data-ng-if="node.memory > 0"><strong>{$ node.memory $} GiB</strong></h2>
+  <h3 class="p-heading--four" data-ng-if="node.memory == 0"><strong>Unknown</strong></h2>
 </header>
 <div data-ng-controller="NodeResultsController" class="p-card__content">
   <div data-ng-repeat="test_result in testing_results">
@@ -16,11 +16,11 @@
     </div>
   </div>
 </div>
-<footer class="p-card__footer">
+<footer>
   <p data-ng-if="!isDevice && !(isController && node.status === 'New') && node.memory > 0">
-    <span data-maas-script-status="script-status" data-script-status="node.memory_test_status"></span>
-    {$ node.memory_test_status_tooltip $}
+    <span data-maas-script-status="script-status" data-script-status="node.memory_test_status.status"></span>
+    {$ node.memory_test_status.status_tooltip $}
   </p>
-  <p><a href="" data-ng-if="!isDevice && !(isController && node.status === 'New') && node.memory > 0 && node.memory_test_status !== -1" data-ng-click="section.area = 'testing'">See results &rsaquo;</a></p>
+  <p><a href="" data-ng-if="!isDevice && !(isController && node.status === 'New') && node.memory > 0 && node.memory_test_status.status !== -1" data-ng-click="section.area = 'testing'">See results &rsaquo;</a></p>
   <p data-ng-if="!isDevice && !(isController && node.status === 'New') && node.memory == 0"><i class="p-icon--information">Information:</i> No data recieved</p>
 </footer>

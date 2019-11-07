@@ -8,25 +8,15 @@ __all__ = []
 from contextlib import closing
 import os
 from pipes import quote
-from subprocess import (
-    PIPE,
-    Popen,
-    STDOUT,
-)
+from subprocess import PIPE, Popen, STDOUT
 
 from maasserver.testing.config import RegionConfigurationFixture
 from maastesting import root
 from maastesting.fixtures import TempDirectory
 from maastesting.testcase import MAASTestCase
 from postgresfixture import ClusterFixture
-from testtools.content import (
-    Content,
-    UTF8_TEXT,
-)
-from testtools.matchers import (
-    HasLength,
-    Not,
-)
+from testtools.content import Content, UTF8_TEXT
+from testtools.matchers import HasLength, Not
 
 
 def get_plpgsql_function_names(conn):
@@ -35,24 +25,27 @@ def get_plpgsql_function_names(conn):
         cursor.execute(
             "SELECT proname FROM pg_proc, pg_language"
             " WHERE pg_language.oid = pg_proc.prolang"
-            "   AND pg_language.lanname = 'plpgsql'")
+            "   AND pg_language.lanname = 'plpgsql'"
+        )
         return cursor.fetchall()
 
 
 def create_trigger_to_delete(conn, namespace):
     with closing(conn.cursor()) as cursor:
         cursor.execute(
-            "CREATE TABLE %s__test_table(id integer NOT NULL);" % (
-                namespace))
+            "CREATE TABLE %s__test_table(id integer NOT NULL);" % namespace
+        )
         cursor.execute(
             "CREATE FUNCTION test_table_procedure() "
             "RETURNS trigger AS $$ "
             "BEGIN RETURN NEW; END; "
-            "$$ LANGUAGE plpgsql;")
+            "$$ LANGUAGE plpgsql;"
+        )
         cursor.execute(
             "CREATE TRIGGER test_table_trigger BEFORE INSERT "
             "ON %s__test_table FOR EACH ROW "
-            "EXECUTE PROCEDURE test_table_procedure();" % namespace)
+            "EXECUTE PROCEDURE test_table_procedure();" % namespace
+        )
     return "%s__test_table" % namespace
 
 
@@ -61,11 +54,9 @@ def get_all_triggers(conn):
         cursor.execute(
             "SELECT tgname::text "
             "FROM pg_trigger, pg_class "
-            "WHERE NOT pg_trigger.tgisinternal;")
-        return [
-            row[0]
-            for row in cursor.fetchall()
-        ]
+            "WHERE NOT pg_trigger.tgisinternal;"
+        )
+        return [row[0] for row in cursor.fetchall()]
 
 
 class TestDBUpgrade(MAASTestCase):
@@ -77,9 +68,14 @@ class TestDBUpgrade(MAASTestCase):
         super(TestDBUpgrade, self).setUp()
         self.datadir = self.useFixture(TempDirectory()).path
         self.cluster = self.useFixture(ClusterFixture(self.datadir))
-        self.useFixture(RegionConfigurationFixture(
-            database_name=self.dbname, database_user=None,
-            database_pass=None, database_host=self.datadir))
+        self.useFixture(
+            RegionConfigurationFixture(
+                database_name=self.dbname,
+                database_user=None,
+                database_pass=None,
+                database_host=self.datadir,
+            )
+        )
 
     def execute(self, command, env):
         process = Popen(command, stdout=PIPE, stderr=STDOUT, env=env)
@@ -89,37 +85,29 @@ class TestDBUpgrade(MAASTestCase):
             self.addDetail(name, Content(UTF8_TEXT, lambda: [output]))
         self.assertEqual(0, process.wait(), "(return code is not zero)")
 
-    def execute_dbupgrade(self, always_south=False):
+    def execute_dbupgrade(self):
         env = os.environ.copy()
         env["MAAS_PREVENT_MIGRATIONS"] = "0"
         mra = os.path.join(root, "bin", "maas-region")
         cmd = [
-            mra, "dbupgrade", "--settings",
+            mra,
+            "dbupgrade",
+            "--settings",
             "maasserver.djangosettings.settings",
         ]
-        if always_south:
-            cmd.append("--always-south")
         self.execute(cmd, env=env)
 
-    def test_dbupgrade_with_always_south(self):
-        """Test ensures that dbupdate always works by performing the south
-        migrations first. This ensures that nothing in the MAAS code prevents
-        upgrades from pre-MAAS 2.0 versions from upgrading to 2.0+."""
+    def test_dbupgrade(self):
+        """Test ensures that dbupdate works."""
         self.cluster.createdb(self.dbname)
-        self.execute_dbupgrade(always_south=True)
-
-    def test_dbupgrade_without_south(self):
-        """Test ensures that dbupdate works without performing the south
-        migrations first."""
-        self.cluster.createdb(self.dbname)
-        self.execute_dbupgrade(always_south=False)
+        self.execute_dbupgrade()
 
     def test_dbupgrade_installs_plpgsql(self):
         self.cluster.createdb(self.dbname)
         with closing(self.cluster.connect(self.dbname)) as conn:
             function_names = get_plpgsql_function_names(conn)
             self.assertThat(function_names, HasLength(0))
-        self.execute_dbupgrade(always_south=False)
+        self.execute_dbupgrade()
         with closing(self.cluster.connect(self.dbname)) as conn:
             function_names = get_plpgsql_function_names(conn)
             self.assertThat(function_names, Not(HasLength(0)))
@@ -128,7 +116,7 @@ class TestDBUpgrade(MAASTestCase):
         self.cluster.createdb(self.dbname)
         with closing(self.cluster.connect(self.dbname)) as conn:
             trigger_name = create_trigger_to_delete(conn, "maasserver")
-        self.execute_dbupgrade(always_south=False)
+        self.execute_dbupgrade()
         with closing(self.cluster.connect(self.dbname)) as conn:
             triggers = get_all_triggers(conn)
             self.assertNotIn(trigger_name, triggers)
@@ -137,7 +125,7 @@ class TestDBUpgrade(MAASTestCase):
         self.cluster.createdb(self.dbname)
         with closing(self.cluster.connect(self.dbname)) as conn:
             trigger_name = create_trigger_to_delete(conn, "metadataserver")
-        self.execute_dbupgrade(always_south=False)
+        self.execute_dbupgrade()
         with closing(self.cluster.connect(self.dbname)) as conn:
             triggers = get_all_triggers(conn)
             self.assertNotIn(trigger_name, triggers)
@@ -146,7 +134,7 @@ class TestDBUpgrade(MAASTestCase):
         self.cluster.createdb(self.dbname)
         with closing(self.cluster.connect(self.dbname)) as conn:
             trigger_name = create_trigger_to_delete(conn, "auth")
-        self.execute_dbupgrade(always_south=False)
+        self.execute_dbupgrade()
         with closing(self.cluster.connect(self.dbname)) as conn:
             triggers = get_all_triggers(conn)
             self.assertNotIn(trigger_name, triggers)

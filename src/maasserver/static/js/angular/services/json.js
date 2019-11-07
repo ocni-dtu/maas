@@ -6,19 +6,21 @@
  * Used by controllers to parse JSON.
  */
 
-angular.module('MAAS').service('JSONService', function() {
+function JSONService() {
+  // Return the JSON for the string or null if it cannot be parsed.
+  this.tryParse = function(jsonString) {
+    try {
+      var obj = JSON.parse(jsonString);
+      // JSON.parse(false) or JSON.parse(1234) will throw errors, but
+      // JSON.parse(null) returns 'null', and typeof null === "object".
+      if (obj && typeof obj === "object" && obj !== null) {
+        return obj;
+      }
+    } catch (e) {
+      // Ignore this error.
+    }
+    return null;
+  };
+}
 
-    // Return the JSON for the string or null if it cannot be parsed.
-    this.tryParse = function(jsonString) {
-        try {
-            var obj = JSON.parse(jsonString);
-            // JSON.parse(false) or JSON.parse(1234) will throw errors, but
-            // JSON.parse(null) returns 'null', and typeof null === "object".
-            if (obj && typeof obj === "object" && obj !== null) {
-                return obj;
-            }
-        }
-        catch (e) { }
-        return null;
-    };
-});
+export default JSONService;

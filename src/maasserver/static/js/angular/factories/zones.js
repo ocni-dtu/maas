@@ -8,50 +8,48 @@
  * notification events about zones.
  */
 
-angular.module('MAAS').factory(
-    'ZonesManager',
-    ['$q', '$rootScope', 'RegionConnection', 'Manager', function(
-            $q, $rootScope, RegionConnection, Manager) {
+function ZonesManager(RegionConnection, Manager) {
+  function ZonesManager() {
+    Manager.call(this);
 
-        function ZonesManager() {
-            Manager.call(this);
+    this._pk = "id";
+    this._handler = "zone";
 
-            this._pk = "id";
-            this._handler = "zone";
+    // Listen for notify events for the zone object.
+    var self = this;
+    RegionConnection.registerNotifier("zone", function(action, data) {
+      self.onNotify(action, data);
+    });
+  }
 
-            // Listen for notify events for the zone object.
-            var self = this;
-            RegionConnection.registerNotifier("zone",
-                function(action, data) {
-                    self.onNotify(action, data);
-                });
-        }
+  ZonesManager.prototype = new Manager();
 
-        ZonesManager.prototype = new Manager();
+  // Return the default zone.
+  ZonesManager.prototype.getDefaultZone = function(pod) {
+    var zoneId = 0;
+    var i;
+    var itemsLength = this._items.length;
 
-        // Return the default zone.
-        ZonesManager.prototype.getDefaultZone = function(pod) {
-            var zoneId = 0;
-            var i;
-            var itemsLength = this._items.length;
+    if (pod) {
+      zoneId = pod.zone;
+    }
 
-            if (pod) {
-                zoneId = pod.zone;
-            }
+    if (itemsLength === 0) {
+      return null;
+    }
 
-            if(itemsLength === 0) {
-                return null;
-            }
+    for (i = 0; i < itemsLength; i++) {
+      if (this._items[i].id === zoneId) {
+        return this._items[i];
+      }
+    }
 
-            for(i=0; i < itemsLength; i++) {
-                if (this._items[i].id === zoneId) {
-                    return this._items[i];
-                }
-            }
+    return this._items[0];
+  };
 
+  return new ZonesManager();
+}
 
-            return this._items[0];
-        };
+ZonesManager.$inject = ["RegionConnection", "Manager"];
 
-        return new ZonesManager();
-    }]);
+export default ZonesManager;

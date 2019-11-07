@@ -5,43 +5,24 @@
  */
 
 describe("NotificationsManager", function() {
+  // Load the MAAS module.
+  beforeEach(angular.mock.module("MAAS"));
 
-    // Load the MAAS module.
-    beforeEach(module("MAAS"));
+  // Load the NotificationsManager and RegionConnection.
+  var NotificationsManager;
+  var RegionConnection;
+  beforeEach(inject(function($injector) {
+    RegionConnection = $injector.get("RegionConnection");
+    spyOn(RegionConnection, "registerNotifier");
+    NotificationsManager = $injector.get("NotificationsManager");
+  }));
 
-    // Load the NotificationsManager and RegionConnection.
-    var NotificationsManager;
-    var RegionConnection;
-    beforeEach(inject(function($injector) {
-        RegionConnection = $injector.get("RegionConnection");
-        spyOn(RegionConnection, "registerNotifier");
-        NotificationsManager = $injector.get("NotificationsManager");
-    }));
+  it("set requires attributes", function() {
+    expect(NotificationsManager._pk).toBe("id");
+    expect(NotificationsManager._handler).toBe("notification");
+  });
 
-    // Make a random notification.
-    function makeNotification(id, selected) {
-        var notification = {
-            name: makeName("name"),
-            authoritative: true
-        };
-        if(angular.isDefined(id)) {
-            notification.id = id;
-        } else {
-            notification.id = makeInteger(1, 100);
-        }
-        if(angular.isDefined(selected)) {
-            notification.$selected = selected;
-        }
-        return notification;
-    }
-
-    it("set requires attributes", function() {
-        expect(NotificationsManager._pk).toBe("id");
-        expect(NotificationsManager._handler).toBe("notification");
-    });
-
-    it("listens for updates", function() {
-        expect(RegionConnection.registerNotifier).toHaveBeenCalled();
-    });
-
+  it("listens for updates", function() {
+    expect(RegionConnection.registerNotifier).toHaveBeenCalled();
+  });
 });

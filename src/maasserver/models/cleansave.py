@@ -3,22 +3,15 @@
 
 """Model mixin: track field states and `full_clean` on every `save`."""
 
-__all__ = [
-    'CleanSave',
-]
+__all__ = ["CleanSave"]
 
 from copy import copy
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models.base import ModelState
-from django.db.models.query_utils import DeferredAttribute
 
 # Used to track that the field was unset.
 FieldUnset = object()
-
-
-class DeferredValueAccessError(AttributeError):
-    """Raised when a deferred value is accessed."""
 
 
 class CleanSaveModelState(ModelState):
@@ -38,10 +31,7 @@ class CleanSaveModelState(ModelState):
 
     def has_any_changed(self, names):
         """Return `True` if any of the provided field names have changed."""
-        return max([
-            name in self._changed_fields
-            for name in names
-        ])
+        return max([name in self._changed_fields for name in names])
 
     def get_old_value(self, name):
         """
@@ -52,21 +42,6 @@ class CleanSaveModelState(ModelState):
         """
         if self.has_changed(name):
             return self._changed_fields[name]
-
-
-class DeferredAttributePreventer(DeferredAttribute):
-    """A `DeferredAttribute` that prevents loading.
-
-    Prevents developers from defering a field and then loading it, which
-    will cause more queries and is *never* a good idea.
-    """
-
-    def __get__(self, instance, cls=None):
-        """Prevent retrieving the field."""
-        if instance is None:
-            return self
-        raise DeferredValueAccessError(
-            "Accessing deferred field is not allowed: %s" % self.field_name)
 
 
 class CleanSave:
@@ -119,27 +94,18 @@ class CleanSave:
                     # immutable and set the old value to the object.
                     self._state._changed_fields[name] = old_value
 
-    def __getattribute__(self, name):
-        """Override descriptor if its a `DeferredAttribute`."""
-        descriptor = getattr(type(self), name, None)
-        if (descriptor is not None and
-                isinstance(descriptor, DeferredAttribute) and
-                not isinstance(descriptor, DeferredAttributePreventer)):
-            descriptor.__class__ = DeferredAttributePreventer
-        return super(CleanSave, self).__getattribute__(name)
-
     def __setattr__(self, name, value):
         """Track the fields that have changed."""
         # Prepare the field tracking inside the `_state`. Don't track until
         # the `_state` is set on the model.
-        if name == '_state':
+        if name == "_state":
             # Override the class of the `_state` attribute to be the
             # `CleanSaveModelState`. This provides the helpers for determining
             # if a field has changed.
             value.__class__ = CleanSaveModelState
             value._changed_fields = {}
             return super(CleanSave, self).__setattr__(name, value)
-        if not hasattr(self, '_state'):
+        if not hasattr(self, "_state"):
             return super(CleanSave, self).__setattr__(name, value)
 
         try:
@@ -153,6 +119,7 @@ class CleanSave:
             else:
                 super(CleanSave, self).__setattr__(name, value)
         else:
+
             def _wrap_setattr():
                 # Wrap `__setattr__` to track the changes.
                 if self._state.adding:
@@ -171,8 +138,9 @@ class CleanSave:
                 # to another model. Just track the difference between the
                 # new and old value.
                 _wrap_setattr()
-            elif (field.one_to_one or
-                    (field.many_to_one and field.related_model)):
+            elif field.one_to_one or (
+                field.many_to_one and field.related_model
+            ):
                 if name == field.attname:
                     # Field that stores the relation field ending in `_id`.
                     # This is updated just like a non-relational field.
@@ -184,38 +152,44 @@ class CleanSave:
                     super(CleanSave, self).__setattr__(name, value)
                 else:
                     raise AttributeError(
-                        'Unknown field(%s) for: %s' % (name, field))
+                        "Unknown field(%s) for: %s" % (name, field)
+                    )
             else:
                 super(CleanSave, self).__setattr__(name, value)
 
     def save(self, *args, **kwargs):
         """Perform `full_clean` before save and only save changed fields."""
-        exclude_clean_fields = {self._meta.pk.name} | set(
-            field.name
-            for field in self._meta.fields
-            if field.is_relation
-        ) | set(
-            f.attname
-            for f in self._meta.concrete_fields
-            if f.attname not in self.__dict__
+        exclude_clean_fields = (
+            {self._meta.pk.name}
+            | set(
+                field.name for field in self._meta.fields if field.is_relation
+            )
+            | set(
+                f.attname
+                for f in self._meta.concrete_fields
+                if f.attname not in self.__dict__
+            )
         )
-        if ('update_fields' in kwargs or
-                kwargs.get('force_insert', False) or
-                kwargs.get('force_update', False) or
-                self.pk is None or self._state.adding or
-                self._meta.pk.attname in self._state._changed_fields):
+        if (
+            "update_fields" in kwargs
+            or kwargs.get("force_insert", False)
+            or kwargs.get("force_update", False)
+            or self.pk is None
+            or self._state.adding
+            or self._meta.pk.attname in self._state._changed_fields
+        ):
             # Nothing has changed, but parameters passed requires a save to
             # occur. Perform the same validation as above for the default
             # Django path, with the exceptions.
             self.full_clean(
-                exclude=exclude_clean_fields,
-                validate_unique=False)
+                exclude=exclude_clean_fields, validate_unique=False
+            )
             self.validate_unique(exclude=[self._meta.pk.name])
             return super(CleanSave, self).save(*args, **kwargs)
         elif self._state._changed_fields:
             # This is the new path where saving only updates the fields
             # that have actually changed.
-            kwargs['update_fields'] = {
+            kwargs["update_fields"] = {
                 key
                 for key, value in self._state._changed_fields.items()
                 if value is not FieldUnset
@@ -226,25 +200,25 @@ class CleanSave:
             exclude_clean_fields |= set(
                 field.name
                 for field in self._meta.fields
-                if field.attname not in kwargs['update_fields']
+                if field.attname not in kwargs["update_fields"]
             )
             self.full_clean(
-                exclude=exclude_clean_fields,
-                validate_unique=False)
+                exclude=exclude_clean_fields, validate_unique=False
+            )
 
             # Validate uniqueness only for fields that have changed and
             # never the primary key.
             exclude_unique_fields = {self._meta.pk.name} | set(
                 field.name
                 for field in self._meta.fields
-                if field.attname not in kwargs['update_fields']
+                if field.attname not in kwargs["update_fields"]
             )
             self.validate_unique(exclude=exclude_unique_fields)
 
             # Re-create the update_fields from `_changed_fields` after
             # performing clean because some clean methods will modify
             # fields on the model.
-            kwargs['update_fields'] = {
+            kwargs["update_fields"] = {
                 key
                 for key, value in self._state._changed_fields.items()
                 if value is not FieldUnset
@@ -255,8 +229,14 @@ class CleanSave:
             return self
 
     def _save_table(
-            self, raw=False, cls=None, force_insert=False,
-            force_update=False, using=None, update_fields=None):
+        self,
+        raw=False,
+        cls=None,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
+    ):
         """
         Do the heavy-lifting involved in saving. Update or insert the data
         for a single table.
@@ -266,15 +246,21 @@ class CleanSave:
         it clears the `_changed_fields` before `post_save` signal is fired.
         """
         if update_fields is not None:
-            update_fields = update_fields.union({
-                key
-                for key, value in self._state._changed_fields.items()
-                if value is not FieldUnset
-            })
+            update_fields = update_fields.union(
+                {
+                    key
+                    for key, value in self._state._changed_fields.items()
+                    if value is not FieldUnset
+                }
+            )
             update_fields = frozenset(update_fields)
         res = super(CleanSave, self)._save_table(
-            raw=raw, cls=cls, force_insert=force_insert,
-            force_update=force_update, using=using,
-            update_fields=update_fields)
+            raw=raw,
+            cls=cls,
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
         self._state._changed_fields = {}
         return res

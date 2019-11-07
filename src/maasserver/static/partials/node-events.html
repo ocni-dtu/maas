@@ -8,7 +8,7 @@
 <div class="ng-hide" data-ng-show="loaded">
     <header class="p-strip--light is-shallow u-no-padding--bottom page-header">
         <div class="row">
-            <div class="tablet-col-4 col-8">
+            <div class="col-medium-4 col-8">
                 <ul class="p-inline-list u-no-margin--bottom">
                     <li class="p-inline-list__item">
                         <h1 class="page-header__title">{$ node.fqdn $}</h1>
@@ -23,7 +23,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="tablet-col-2 col-4">
+            <div class="col-medium-2 col-4">
                 <div class="page-header__controls u-float--right">
                     <a href="#/{$ type_name $}/{$ node.system_id $}">&lsaquo;&nbsp;Back to {$ type_name $} details</a>
                 </div>
@@ -34,13 +34,12 @@
         <div class="row">
             <form>
                 <div id="search-bar" class="p-search-box">
-                    <!-- XXX blake_r 2015-02-18 - Need to add e2e test. -->
                     <input type="search" placeholder="Search {$ type_name $} events in the past {$ days $} days"
                         class="p-search-box__input" data-ng-model="search" />
                     <button type="submit" class="p-search-box__button" alt="search"><i class="p-icon--search"></i></button>
                 </div>
                 <table id="events-listing" window-width>
-                    <thead data-ng-if="windowWidth >= 769" offset="88" media-query="min-width: 768px">
+                    <thead data-ng-if="windowWidth >= 769" offset="88" media-query="min-width: 772px">
                         <tr>
                             <th class="col-3">Time</th>
                             <th class="col-9">Event</th>

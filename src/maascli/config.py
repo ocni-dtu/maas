@@ -3,20 +3,13 @@
 
 """Configuration abstractions for the MAAS CLI."""
 
-__all__ = [
-    "ProfileConfig",
-    ]
+__all__ = ["ProfileConfig"]
 
-from contextlib import (
-    closing,
-    contextmanager,
-)
+from contextlib import closing, contextmanager
 import json
 import os
 from os.path import expanduser
 import sqlite3
-
-from maascli import utils
 
 
 class ProfileConfig:
@@ -30,7 +23,8 @@ class ProfileConfig:
                 "CREATE TABLE IF NOT EXISTS profiles "
                 "(id INTEGER PRIMARY KEY,"
                 " name TEXT NOT NULL UNIQUE,"
-                " data BLOB)")
+                " data BLOB)"
+            )
         self.__fill_cache()
 
     def cursor(self):
@@ -52,8 +46,7 @@ class ProfileConfig:
         if self.cache:
             return (name for name in self.cache)
         with self.cursor() as cursor:
-            results = cursor.execute(
-                "SELECT name FROM profiles").fetchall()
+            results = cursor.execute("SELECT name FROM profiles").fetchall()
         return (name for (name,) in results)
 
     def __getitem__(self, name):
@@ -61,8 +54,8 @@ class ProfileConfig:
             return self.cache[name]
         with self.cursor() as cursor:
             data = cursor.execute(
-                "SELECT data FROM profiles"
-                " WHERE name = ?", (name,)).fetchone()
+                "SELECT data FROM profiles" " WHERE name = ?", (name,)
+            ).fetchone()
         if data is None:
             raise KeyError(name)
         else:
@@ -74,14 +67,14 @@ class ProfileConfig:
         with self.cursor() as cursor:
             cursor.execute(
                 "INSERT OR REPLACE INTO profiles (name, data) "
-                "VALUES (?, ?)", (name, json.dumps(data)))
+                "VALUES (?, ?)",
+                (name, json.dumps(data)),
+            )
         self.cache[name] = data
 
     def __delitem__(self, name):
         with self.cursor() as cursor:
-            cursor.execute(
-                "DELETE FROM profiles"
-                " WHERE name = ?", (name,))
+            cursor.execute("DELETE FROM profiles" " WHERE name = ?", (name,))
         try:
             del self.cache[name]
         except KeyError:
@@ -94,30 +87,24 @@ class ProfileConfig:
 
     @classmethod
     @contextmanager
-    def open(cls, dbpath=expanduser("~/.maascli.db")):
+    def open(cls, dbpath=expanduser("~/.maascli.db"), create=False):
         """Load a profiles database.
 
-        Called without arguments this will open (and create) a database in the
-        user's home directory.
+        Called without arguments this will open (and create, if create=True) a
+        database in the user's home directory.
 
         **Note** that this returns a context manager which will close the
         database on exit, saving if the exit is clean.
-        """
-        # As the effective UID and GID of the user invoking `sudo` (if any)...
-        try:
-            with utils.sudo_gid(), utils.sudo_uid():
-                cls.create_database(dbpath)
-        except PermissionError:
-            # Creating the database might fail if $HOME is set to the current
-            # effective UID's $HOME, but we have permission to change the UID
-            # to one without permission to access $HOME. So try again without
-            # changing the GID/UID.
-            cls.create_database(dbpath)
 
+        """
+        if create:
+            cls.create_database(dbpath)
+        elif not os.path.exists(dbpath):
+            raise FileNotFoundError(dbpath)
         database = sqlite3.connect(dbpath)
         try:
             yield cls(database)
-        except:
+        except BaseException:
             raise
         else:
             database.commit()

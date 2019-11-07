@@ -15,7 +15,9 @@ import time
 
 from provisioningserver import logger
 from provisioningserver.logger import LegacyLogger
+from provisioningserver.prometheus.utils import clean_prometheus_dir
 from provisioningserver.utils.debug import (
+    register_sigusr1_toggle_cprofile,
     register_sigusr2_thread_dump_handler,
 )
 from twisted.application.service import IServiceMaker
@@ -49,11 +51,13 @@ class RegionWorkerServiceMaker:
         # Sadly the only way to do this in python is to use ctypes. This tells
         # the kernel that when my parent dies to kill me.
         import ctypes
+
         libc = ctypes.CDLL("libc.so.6")
         libc.prctl(1, signal.SIGKILL)
 
     def _configureThreads(self):
         from maasserver.utils import threads
+
         threads.install_default_pool()
         threads.install_database_pool()
 
@@ -67,6 +71,7 @@ class RegionWorkerServiceMaker:
         # having Django -- most specifically the ORM -- up and running is a
         # prerequisite of almost everything in the region controller.
         import django
+
         django.setup()
 
     def _configurePservSettings(self):
@@ -74,11 +79,13 @@ class RegionWorkerServiceMaker:
         # django settings.
         from django.conf import settings as django_settings
         from provisioningserver import settings
+
         settings.DEBUG = django_settings.DEBUG
 
     def _configureReactor(self):
         # Disable all database connections in the reactor.
         from maasserver.utils.orm import disable_all_database_connections
+
         if isInIOThread():
             disable_all_database_connections()
         else:
@@ -88,11 +95,13 @@ class RegionWorkerServiceMaker:
         # Prevent other libraries from starting the reactor via crochet.
         # In other words, this makes crochet.setup() a no-op.
         import crochet
+
         crochet.no_setup()
 
     def _reconfigureLogging(self):
         # Reconfigure the logging based on the debug mode of Django.
         from django.conf import settings
+
         if settings.DEBUG:
             # In debug mode, force logging to debug mode.
             logger.set_verbosity(3)
@@ -101,14 +110,18 @@ class RegionWorkerServiceMaker:
             # use the debug cursor. This is needed or Django will store in
             # memory every SQL query made.
             from provisioningserver.config import is_dev_environment
+
             if not is_dev_environment():
                 from django.db.backends.base import base
                 from django.db.backends.utils import CursorWrapper
-                base.BaseDatabaseWrapper.make_debug_cursor = (
-                    lambda self, cursor: CursorWrapper(cursor, self))
+
+                base.BaseDatabaseWrapper.make_debug_cursor = lambda self, cursor: CursorWrapper(
+                    cursor, self
+                )
 
     def makeService(self, options):
         """Construct the MAAS Region service."""
+        register_sigusr1_toggle_cprofile("regiond-worker")
         register_sigusr2_thread_dump_handler()
 
         self._set_pdeathsig()
@@ -124,11 +137,12 @@ class RegionWorkerServiceMaker:
 
         # Should the import services run in this worker.
         import_services = False
-        if os.environ.get('MAAS_REGIOND_RUN_IMPORTER_SERVICE') == 'true':
+        if os.environ.get("MAAS_REGIOND_RUN_IMPORTER_SERVICE") == "true":
             import_services = True
 
         # Populate the region's event-loop with services.
         from maasserver import eventloop
+
         eventloop.loop.populate(master=False, import_services=import_services)
 
         # Return the eventloop's services to twistd, which will then be
@@ -149,6 +163,7 @@ class RegionMasterServiceMaker(RegionWorkerServiceMaker):
     def _ensureConnection(self):
         # If connection is already made close it.
         from django.db import connection
+
         if connection.connection is not None:
             connection.close()
 
@@ -157,9 +172,12 @@ class RegionMasterServiceMaker(RegionWorkerServiceMaker):
             try:
                 connection.ensure_connection()
             except Exception:
-                log.err(_why=(
-                    "Error starting: "
-                    "Connection to database cannot be established."))
+                log.err(
+                    _why=(
+                        "Error starting: "
+                        "Connection to database cannot be established."
+                    )
+                )
                 time.sleep(1)
             else:
                 # Connection made, now close it.
@@ -168,7 +186,9 @@ class RegionMasterServiceMaker(RegionWorkerServiceMaker):
 
     def makeService(self, options):
         """Construct the MAAS Region service."""
+        register_sigusr1_toggle_cprofile("regiond-master")
         register_sigusr2_thread_dump_handler()
+        clean_prometheus_dir()
 
         self._configureThreads()
         self._configureLogging(options["verbosity"])
@@ -183,6 +203,7 @@ class RegionMasterServiceMaker(RegionWorkerServiceMaker):
 
         # Populate the region's event-loop with services.
         from maasserver import eventloop
+
         eventloop.loop.populate(master=True)
 
         # Return the eventloop's services to twistd, which will then be
@@ -206,6 +227,7 @@ class RegionAllInOneServiceMaker(RegionMasterServiceMaker):
 
     def makeService(self, options):
         """Construct the MAAS Region service."""
+        register_sigusr1_toggle_cprofile("regiond-all")
         register_sigusr2_thread_dump_handler()
 
         self._configureThreads()
@@ -221,8 +243,10 @@ class RegionAllInOneServiceMaker(RegionMasterServiceMaker):
 
         # Populate the region's event-loop with services.
         from maasserver import eventloop
+
         eventloop.loop.populate(
-            master=True, all_in_one=True, import_services=True)
+            master=True, all_in_one=True, import_services=True
+        )
 
         # Return the eventloop's services to twistd, which will then be
         # responsible for starting them all.

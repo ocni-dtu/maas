@@ -4,50 +4,59 @@
  * MAAS Zones List Controller
  */
 
-angular.module('MAAS').controller('ZonesListController', [
-    '$scope', '$rootScope', '$routeParams', '$filter', 'MachinesManager',
-    'DevicesManager', 'ControllersManager', 'ZonesManager', 'ServicesManager',
-    'UsersManager', 'ManagerHelperService', 'ErrorService',
-    function($scope, $rootScope, $routeParams, $filter, MachinesManager,
-        DevicesManager, ControllersManager, ZonesManager, ServicesManager,
-        UsersManager, ManagerHelperService, ErrorService) {
+/* @ngInject */
+function ZonesListController(
+  $scope,
+  $rootScope,
+  ZonesManager,
+  UsersManager,
+  ManagerHelperService,
+  GeneralManager
+) {
+  // Set title and page.
+  $rootScope.title = "Zones";
+  $rootScope.page = "zones";
 
-        // Set title and page.
-        $rootScope.title = "Zones";
-        $rootScope.page = "zones";
+  // Set initial values.
+  $scope.zoneManager = ZonesManager;
+  $scope.zones = ZonesManager.getItems();
+  $scope.currentpage = "zones";
+  $scope.predicate = "name";
+  $scope.reverse = false;
+  $scope.loading = true;
+  $scope.action = {
+    open: false,
+    obj: {}
+  };
 
-        // Set initial values.
-        $scope.zoneManager = ZonesManager;
-        $scope.zones = ZonesManager.getItems();
-        $scope.currentpage = "zones";
-        $scope.predicate = "name";
-        $scope.reverse = false;
-        $scope.loading = true;
-        $scope.action = {
-          open: false,
-          obj: {}
-        };
+  // Open add zone view.
+  $scope.addZone = function() {
+    $scope.action.open = true;
+  };
 
-        // Open add zone view.
-        $scope.addZone = function() {
-          $scope.action.open = true;
-        };
+  // Saving has completed.
+  $scope.closeZone = function() {
+    $scope.action.open = false;
+    $scope.action.obj = {};
+  };
 
-        // Saving has completed.
-        $scope.closeZone = function() {
-          $scope.action.open = false;
-          $scope.action.obj = {};
-        };
+  // Return true if the authenticated user is super user.
+  $scope.isSuperUser = function() {
+    return UsersManager.isSuperUser();
+  };
 
-        // Return true if the authenticated user is super user.
-        $scope.isSuperUser = function() {
-            return UsersManager.isSuperUser();
-        };
+  ManagerHelperService.loadManagers($scope, [ZonesManager, UsersManager]).then(
+    function() {
+      $scope.loading = false;
 
-        ManagerHelperService.loadManagers(
-            $scope, [ZonesManager, UsersManager]).then(
-            function() {
-                $scope.loading = false;
-            });
-        }
-    ]);
+      // Set flag for RSD navigation item.
+      if (!$rootScope.showRSDLink) {
+        GeneralManager.getNavigationOptions().then(
+          res => ($rootScope.showRSDLink = res.rsd)
+        );
+      }
+    }
+  );
+}
+
+export default ZonesListController;

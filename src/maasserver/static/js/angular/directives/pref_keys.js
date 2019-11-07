@@ -6,129 +6,150 @@
  * Provides the interactivity of the MAAS key section of the user profile.
  */
 
+/* @ngInject */
+export function maasPrefKeys($q, RegionConnection, UsersManager) {
+  return {
+    restrict: "A",
+    controller: function() {
+      var self = this;
 
-angular.module('MAAS')
-.directive('maasPrefKeys',
-    ['$q', 'RegionConnection', 'UsersManager',
-    function($q, RegionConnection, UsersManager) {
-        return {
-            restrict: "A",
-            controller: function() {
-                var self = this;
-
-                self.addKey = function() {
-                    var defer = $q.defer();
-                    RegionConnection.defaultConnect().then(function() {
-                        UsersManager.createAuthorisationToken().then(
-                            function(token) {
-                                if(self.injector) {
-                                    self.injector(token);
-                                }
-                                defer.resolve(token);
-                            });
-                    });
-                    return defer.promise;
-                };
-
-                self.deleteKey = function(key) {
-                    RegionConnection.defaultConnect().then(function() {
-                        UsersManager.deleteAuthorisationToken(key);
-                    });
-                };
+      self.addKey = function() {
+        var defer = $q.defer();
+        RegionConnection.defaultConnect().then(function() {
+          UsersManager.createAuthorisationToken().then(function(token) {
+            if (self.injector) {
+              self.injector(token);
             }
-        };
-    }])
-.directive('maasPrefKeysInject',
-    ['$compile', '$templateCache',
-    function($compile, $templateCache) {
-        return {
-            restrict: 'A',
-            require: '^maasPrefKeys',
-            scope: {
-                template: '@maasPrefKeysInject'
-            },
-            link: function($scope, $element, $attrs, controller) {
-                var template = $templateCache.get($scope.template);
-                if(!template) {
-                    throw new Error(
-                        "Unable to load template: " + $scope.template);
-                }
+            defer.resolve(token);
+          });
+        });
+        return defer.promise;
+      };
 
-                // Set the injector on the controller.
-                controller.injector = function(token) {
-                    var newScope = $scope.$new();
-                    newScope.token = token;
+      self.deleteKey = function(key) {
+        RegionConnection.defaultConnect().then(function() {
+          UsersManager.deleteAuthorisationToken(key);
+        });
+      };
+    }
+  };
+}
 
-                    var newElement = angular.element(template);
-                    $element.append(newElement);
-                    $compile(newElement)(newScope);
-                };
-            }
-        };
-    }])
-.directive('maasPrefKeysAdd', function() {
-    return {
-        restrict: 'A',
-        require: '^maasPrefKeys',
-        link: function($scope, $element, $attrs, controller) {
-            var spinner = (
-                '<i class="p-icon--spinner u-animation--spin"></i>');
+/* @ngInject */
+export function maasPrefKeysInject($compile, $templateCache) {
+  return {
+    restrict: "A",
+    require: "^maasPrefKeys",
+    scope: {
+      template: "@maasPrefKeysInject"
+    },
+    link: function($scope, $element, $attrs, controller) {
+      var template = $templateCache.get($scope.template);
+      if (!template) {
+        throw new Error("Unable to load template: " + $scope.template);
+      }
 
-            $element.on('click', function(evt) {
-                evt.preventDefault();
+      // Set the injector on the controller.
+      controller.injector = function(token) {
+        var newScope = $scope.$new();
+        newScope.token = token;
 
-                // Add the spinner.
-                var spinElement = angular.element(spinner);
-                $element.prepend(spinElement);
+        var newElement = angular.element(template);
+        $element.append(newElement);
+        $compile(newElement)(newScope);
+      };
+    }
+  };
+}
 
-                // Add the new key.
-                $scope.$apply(function() {
-                    controller.addKey().then(function() {
-                        // Remove the spinner.
-                        spinElement.remove();
-                    });
-                });
-            });
-        }
+export function maasPrefKeysAdd() {
+  return {
+    restrict: "A",
+    require: "^maasPrefKeys",
+    link: function($scope, $element, $attrs, controller) {
+      var spinner = '<i class="p-icon--spinner u-animation--spin"></i>';
+
+      $element.on("click", function(evt) {
+        evt.preventDefault();
+
+        // Add the spinner.
+        $scope.addingKey = true;
+        var spinElement = angular.element(spinner);
+        $element.prepend(spinElement);
+
+        // Add the new key.
+        $scope.$apply(function() {
+          controller.addKey().then(function() {
+            // Remove the spinner.
+            $scope.addingKey = false;
+            spinElement.remove();
+          });
+        });
+      });
+    }
+  };
+}
+
+export function maasPrefKey() {
+  return {
+    restrict: "A",
+    require: "^maasPrefKeys",
+    scope: {
+      key: "@maasPrefKey"
+    },
+    controller: DeleteKey,
+    link: function($scope, $element, $attrs, controller) {
+      // Needed so the controller of this directive can get the parent
+      // controller.
+      $scope.prefsController = controller;
+    }
+  };
+
+  /* @ngInject */
+  function DeleteKey($scope, $element) {
+    var self = this;
+
+    self.deleteKey = function() {
+      $scope.prefsController.deleteKey($scope.key);
+
+      // Delete self.
+      $scope.$destroy();
+      $element.remove();
     };
-})
-.directive('maasPrefKey', function() {
-    return {
-        restrict: 'A',
-        require: '^maasPrefKeys',
-        scope: {
-            'key': '@maasPrefKey'
-        },
-        controller: ['$scope', '$element', function($scope, $element) {
-            var self = this;
+  }
+}
 
-            self.deleteKey = function() {
-                $scope.prefsController.deleteKey($scope.key);
+export function maasPrefKeyDelete() {
+  return {
+    restrict: "A",
+    require: "^maasPrefKey",
+    link: function($scope, $element, $attrs, controller) {
+      $element.on("click", function(evt) {
+        evt.preventDefault();
 
-                // Delete self.
-                $scope.$destroy();
-                $element.remove();
-            };
-        }],
-        link: function($scope, $element, $attrs, controller) {
-            // Needed so the controller of this directive can get the parent
-            // controller.
-            $scope.prefsController = controller;
-        }
-    };
-})
-.directive('maasPrefKeyDelete', function() {
-    return {
-        restrict: 'A',
-        require: '^maasPrefKey',
-        link: function($scope, $element, $attrs, controller) {
-            $element.on('click', function(evt) {
-                evt.preventDefault();
+        $scope.$apply(function() {
+          controller.deleteKey();
+        });
+      });
+    }
+  };
+}
 
-                $scope.$apply(function() {
-                    controller.deleteKey();
-                });
-            });
-        }
-    };
-});
+export function maasPrefKeyCopy() {
+  return {
+    restrict: "A",
+    require: "^maasPrefKey",
+    link: function($scope, $element) {
+      $element.on("click", e => {
+        let clipboardParent = e.currentTarget.previousSibling;
+        let clipboardValue = clipboardParent.previousSibling.value;
+        let el = document.createElement("textarea");
+        el.value = clipboardValue;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      });
+    }
+  };
+}

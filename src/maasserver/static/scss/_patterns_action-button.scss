@@ -4,17 +4,17 @@
 
     &::before {
       background-size: map-get($icon-sizes, default);
-      content: '';
+      content: "";
       height: map-get($icon-sizes, default);
-      left: $sph-intra;
+      left: $sph-inner;
       position: absolute;
-      top: $spv-intra--condensed + $spv-nudge - $px;
+      top: calc(#{$spv-inner--x-small + $spv-nudge} - 1px);
       width: map-get($icon-sizes, default);
     }
 
     &.is-indeterminate,
     &.is-done {
-      padding-left: $sph-intra--expanded + map-get($icon-sizes, default);
+      padding-left: $sph-inner--large + map-get($icon-sizes, default);
     }
 
     &.is-indeterminate {

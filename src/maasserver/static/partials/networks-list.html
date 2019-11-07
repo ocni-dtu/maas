@@ -1,11 +1,10 @@
 <header class="p-strip--light is-shallow u-no-padding--bottom page-header" media-query="min-width: 769px">
     <div class="row">
-        <div class="tablet-col-4 col-8">
+        <div class="col-medium-4 col-8">
             <h1 class="page-header__title">Subnets</h1>
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
             <p class="page-header__status u-no-margin--top" data-ng-show="loading"><span class="u-text--loading"><i class="p-icon--spinner u-animation--spin"></i> Loading...</span></p>
         </div>
-        <div class="tablet-col-2 col-4">
+        <div class="col-medium-2 col-4">
             <!-- Drop-down box -->
             <div class="page-header__controls u-float--right" data-ng-show="actionOptions.length">
                 <div data-maas-cta="actionOptions"
@@ -21,14 +20,20 @@
           <div class="p-strip">
             <maas-obj-form obj="newObject" manager="fabricManager" manager-method="createItem"
                 inline="true" save-on-blur="false" after-save="cancelAction">
-                <maas-obj-field
-                  type="text" key="name" label="Add fabric" subtle="false"
-                  placeholder="Name (optional)"></maas-obj-field>
-                <maas-obj-errors></maas-obj-errors>
-                <div class="page-header__controls u-no-margin--top col-4">
-                    <div class="u-align--right">
-                        <button class="p-button p-button--inline" data-ng-click="cancelAction()">Cancel</button>
-                        <button class="p-button--positive p-button--inline" maas-obj-save>Add fabric</button>
+                <div class="row">
+                    <div class="col-6">
+                        <maas-obj-field
+                          type="text" key="name" label="Add fabric" subtle="false"
+                          placeholder="Name (optional)"></maas-obj-field>
+                        <maas-obj-errors></maas-obj-errors>
+                    </div>
+                    <div class="col-6">
+                        <div class="page-header__controls u-no-margin--top col-4">
+                            <div class="u-align--right">
+                                <button class="p-button p-button--inline" data-ng-click="cancelAction()">Cancel</button>
+                                <button class="p-button--positive p-button--inline" maas-obj-save>Add fabric</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </maas-obj-form>
@@ -42,20 +47,20 @@
                         <div class="col-6">
                             <maas-obj-field
                                 type="text" key="name" label="Add VLAN" subtle="false"
-                                placeholder="Name (optional)" label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                                placeholder="Name (optional)" label-width="2" input-width="4"></maas-obj-field>
                             <maas-obj-field
                                 type="text" key="vid" label="with VID" subtle="false"
-                                placeholder="numeric value 1-4094" label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                                placeholder="numeric value 1-4094" label-width="2" input-width="4"></maas-obj-field>
                         </div>
                         <div class="col-6">
                             <maas-obj-field
                                 type="options" key="fabric" label="to fabric" subtle="false"
                                 options="f.id as f.name for f in fabrics"
-                                placeholder="Select fabric" label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                                placeholder="Select fabric" label-width="2" input-width="4"></maas-obj-field>
                             <maas-obj-field
                                 subtle="false" type="options" key="space" label="in space"
                                 placeholder="(undefined)" placeholder-enabled="true"
-                                options="space.id as space.name for space in spaces" label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                                options="space.id as space.name for space in spaces" label-width="2" input-width="4"></maas-obj-field>
                         </div>
                     </div>
                 </div>
@@ -69,16 +74,21 @@
             </maas-obj-form>
         </section>
         <section class="row u-no-margin--bottom ng-hide" data-ng-show="actionOption.name === 'add_space'">
-            <maas-obj-form obj="newObject" manager="spaceManager" manager-method="createItem"
-                inline="true" save-on-blur="false" after-save="cancelAction">
-                  <maas-obj-field
-                      type="text" key="name" label="Add space" subtle="false"
-                      placeholder="Name (optional)"></maas-obj-field>
-                  <maas-obj-errors></maas-obj-errors>
-                  <div class="page-header__controls u-no-margin--top u-align--right col-4">
-                      <button class="p-button p-button--inline" data-ng-click="cancelAction()">Cancel</button>
-                      <button class="p-button--positive p-button--inline" maas-obj-save>Add space</button>
-                  </div>
+            <maas-obj-form obj="newObject" manager="spaceManager" manager-method="createItem" inline="true" save-on-blur="false" after-save="cancelAction">
+                <div class="row">
+                    <div class="col-6">
+                        <maas-obj-field
+                            type="text" key="name" label="Add space" subtle="false"
+                            placeholder="Name (optional)"></maas-obj-field>
+                        <maas-obj-errors></maas-obj-errors>
+                    </div>
+                    <div class="col-6">
+                        <div class="page-header__controls u-no-margin--top u-align--right col-4">
+                            <button class="p-button p-button--inline" data-ng-click="cancelAction()">Cancel</button>
+                            <button class="p-button--positive p-button--inline" maas-obj-save>Add space</button>
+                        </div>
+                    </div>
+                </div>
             </maas-obj-form>
         </section>
         <section class="row ng-hide" data-ng-show="actionOption.name == 'add_subnet'">
@@ -88,25 +98,25 @@
               <div class="col-6">
                 <maas-obj-field
                     subtle="false" type="text" key="name" label="Name" placeholder="Name (optional)"
-                    label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                    label-width="2" input-width="4"></maas-obj-field>
                 <maas-obj-field
                     subtle="false" type="text" key="cidr" label="CIDR"
                     placeholder="Use IPv4 or IPv6 format"
-                    label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                    label-width="2" input-width="4"></maas-obj-field>
                 <maas-obj-field
                     subtle="false" type="text" key="gateway_ip" label="Gateway IP"
                     placeholder="Use IPv4 or IPv6 format (optional)"
-                    label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                    label-width="2" input-width="4"></maas-obj-field>
               </div>
               <div class="col-6">
                 <maas-obj-field
                     subtle="false" type="text" key="dns_servers" label="DNS servers"
                     placeholder="Use IPv4 or IPv6 format (optional)"
-                    label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                    label-width="2" input-width="4"></maas-obj-field>
                 <maas-obj-field
                     subtle="false" type="options" key="vlan" label="Fabric &amp; VLAN" placeholder="Choose Fabric &amp; VLAN"
                     options="v.id as getVLANName(v) group by getFabricNameById(v.fabric) for v in vlans"
-                    label-width="2" label-width-tablet="2" input-width="3" input-width-tablet="4"></maas-obj-field>
+                    label-width="2" input-width="4"></maas-obj-field>
               </div>
             </section>
             <section class="u-no-margin--top">
@@ -119,30 +129,32 @@
         </maas-obj-form>
     </div>
 </header>
+
 <div class="p-strip is-shallow u-no-padding--bottom">
     <div class="row">
         <maas-notifications></maas-notifications>
     </div>
 </div>
+
 <section class="p-strip is-shallow">
     <div class="row u-equal-height">
         <div class="col-4">
-            <form class="p-form">
-                <div class="p-form__group row">
-                    <label class="p-form__label col-1 tablet-col-2" for="network-filter">Group by</label>
-                    <select name="network-filter" class="p-form__control col-3 tablet-col-2" id="networks-groupby" data-ng-model="groupBy" data-ng-change="updateGroupBy()">
-                        <option value="fabric">Fabrics</option>
-                        <option value="space">Spaces</option>
-                    </select>
+            <form class="p-form p-form--inline">
+                <div class="p-form__group">
+                    <label class="p-form__label u-no-margin--bottom" for="network-filter">Group by</label>
+                    <div class="p-form__control">
+                        <select name="network-filter" class="p-form__control u-no-margin--bottom" id="networks-groupby" data-ng-model="groupBy" data-ng-change="updateGroupBy()">
+                            <option value="fabric">Fabrics</option>
+                            <option value="space">Spaces</option>
+                        </select>
+                    </div>
+                    &emsp;
+                    <div class="p-tooltip--right u-vertically-center">
+                        <i class="p-icon--help u-hide u-show--large">Help:</i>
+                        <span class="p-tooltip__message" role="tooltip">Fabric is a set of consistent interconnected VLANs that are capable of mutual communication.&#xa;Space is a grouping of networks (VLANs and their subnets) that are able to mutually communicate with each other.&#xa;Subnets within a space do not need to belong to the same fabric.</span>
+                    </div>
                 </div>
             </form>
-        </div>
-        <div class="col-1 u-vertically-center u-no-margin--left">
-            &emsp;
-            <div class="p-tooltip p-tooltip--right">
-                <i class="p-icon--help u-hide u-show--large">Help:</i>
-                <span class="p-tooltip__message" role="tooltip">Fabric is a set of consistent interconnected VLANs that are capable of mutual communication.&#xa;Space is a grouping of networks (VLANs and their subnets) that are able to mutually communicate with each other.&#xa;Subnets within a space do not need to belong to the same fabric.</span>
-            </div>
         </div>
     </div>
 </section>
@@ -164,10 +176,6 @@
             <table class="ng-hide" data-ng-show="groupBy === 'space'">
                 <thead>
                     <tr>
-                        <!-- <th class="ng-hide">
-                            <input class="checkbox" type="checkbox" id="spaces-all" />
-                            <label class="checkbox-label" for="spaces-all"></label>
-                        </th> -->
                         <th>Space</th>
                         <th>VLAN</th>
                         <th>DHCP</th>
@@ -178,12 +186,6 @@
                 </thead>
                 <tbody vs-repeat vs-scroll-parent="window">
                     <tr data-ng-repeat="row in group.spaces.rows">
-                        <!-- <td class="ng-hide">
-                            <div data-ng-if="row.space_name">
-                                <input class="checkbox" type="checkbox" id="space-{$ row.space.id $}" />
-                                <label class="checkbox-label" for="space-{$ row.space.id $}"></label>
-                            </div>
-                        </td> -->
                         <td aria-label="Space" title="{$ row.space_name $}">
                             <a href="#/space/{$ row.space.id $}">{$ row.space_name $}</a>
                         </td>
@@ -191,8 +193,8 @@
                             <a href="#/vlan/{$ row.vlan.id $}" title="{$ row.vlan_name $}">{$ row.vlan_name $}</a>
                         </td>
                         <td aria-label="DHCP">
-                            <p data-ng-if="row.vlan.dhcp_on === true || row.vlan.relay_vlan !== null">Enabled</p>
-                            <p data-ng-if="row.vlan.dhcp_on !== true && row.vlan.relay_vlan === null">Disabled</p>
+                            <div data-ng-if="row.vlan.dhcp_on === true || row.vlan.relay_vlan !== null">Enabled</div>
+                            <div data-ng-if="row.vlan.dhcp_on !== true && row.vlan.relay_vlan === null">Disabled</div>
                         </td>
                         <td aria-label="Fabric">
                             <a href="#/fabric/{$ row.fabric.id $}" title="{$ row.fabric.name $}">{$ row.fabric.name $}</a>
@@ -214,8 +216,8 @@
                             <a href="#/vlan/{$ row.vlan.id $}">{$ row.vlan_name $}</a>
                         </td>
                         <td aria-label="DHCP">
-                            <p data-ng-if="row.vlan.dhcp_on === true || row.vlan.relay_vlan !== null || row.vlan.external_dhcp === true" title="Enabled">Enabled</p>
-                            <p data-ng-if="row.vlan.dhcp_on !== true && row.vlan.relay_vlan === null" title="Disabled">Disabled</p>
+                            <div data-ng-if="row.vlan.dhcp_on === true || row.vlan.relay_vlan !== null || row.vlan.external_dhcp === true" title="Enabled">Enabled</div>
+                            <div data-ng-if="row.vlan.dhcp_on !== true && row.vlan.relay_vlan === null" title="Disabled">Disabled</div>
                         </td>
                         <td title="{$ row.fabric.name $}">
                             <a href="#/fabric/{$ row.fabric.id $}">{$ row.fabric.name $}</a>
@@ -234,10 +236,6 @@
             <table class="u-no-margin--top ng-hide" data-ng-show="groupBy === 'fabric'">
                 <thead>
                     <tr>
-                        <!-- <th class="ng-hide">
-                            <input class="checkbox" type="checkbox" id="fabrics-all" />
-                            <label class="checkbox-label" for="fabrics-all"></label>
-                        </th> -->
                         <th>Fabric</th>
                         <th>VLAN</th>
                         <th>DHCP</th>
@@ -248,12 +246,6 @@
                 </thead>
                 <tbody vs-repeat vs-scroll-parent="window">
                     <tr data-ng-repeat="row in group.fabrics.rows">
-                        <!-- <td class="ng-hide">
-                            <div data-ng-if="row.fabric_name">
-                                <input class="checkbox" type="checkbox" id="fabric-{$ row.fabric.id $}" />
-                                <label class="checkbox-label" for="fabric-{$ row.fabric.id $}"></label>
-                            </div>
-                        </td> -->
                         <td aria-label="Fabric" title="{$ row.fabric_name $}">
                             <a href="#/fabric/{$ row.fabric.id $}">{$ row.fabric_name $}</a>
                         </td>
@@ -261,8 +253,7 @@
                             <a href="#/vlan/{$ row.vlan.id $}">{$ row.vlan_name $}</a>
                         </td>
                         <td aria-label="DHCP">
-                            <span data-ng-if="row.vlan.dhcp_on === true || row.vlan.relay_vlan !== null || row.vlan.external_dhcp === true" title="Enabled">Enabled</span>
-                            <span data-ng-if="row.vlan.dhcp_on !== true && row.vlan.relay_vlan === null" title="Disabled">Disabled</span>
+                            {$ getDHCPStatus(row.vlan) $}
                         </td>
                         <td aria-label="Subnet" title="{$ row.subnet_name $}">
                             <a href="#/subnet/{$ row.subnet.id $}">{$ row.subnet_name $}</a>

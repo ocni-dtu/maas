@@ -1,18 +1,12 @@
 python := python3
-snapcraft := snapcraft
+snapcraft := SNAPCRAFT_BUILD_INFO=1 /snap/bin/snapcraft
+
+VENV := .ve
 
 # pkg_resources makes some incredible noise about version numbers. They
 # are not indications of bugs in MAAS so we silence them everywhere.
 export PYTHONWARNINGS = \
   ignore:You have iterated over the result:RuntimeWarning:pkg_resources:
-
-# Network activity can be suppressed by setting offline=true (or any
-# non-empty string) at the command-line.
-ifeq ($(offline),)
-buildout := bin/buildout
-else
-buildout := bin/buildout buildout:offline=true
-endif
 
 # If offline has been selected, attempt to further block HTTP/HTTPS
 # activity by setting bogus proxies in the environment.
@@ -21,19 +15,15 @@ export http_proxy := broken
 export https_proxy := broken
 endif
 
-# MAAS SASS stylesheets. The first input file (maas-styles.css) imports
-# the others, so is treated specially in the target definitions.
-scss_input := src/maasserver/static/scss/build.scss
-scss_deps := $(wildcard src/maasserver/static/scss/_*.scss)
-scss_output := src/maasserver/static/css/build.css
-
-javascript_deps := \
+asset_deps := \
   $(shell find src -name '*.js' -not -path '*/maasserver/static/js/bundle/*') \
+  $(shell find src -name '*.scss') \
   package.json \
   webpack.config.js \
   yarn.lock
 
-javascript_output := \
+asset_output := \
+  src/maasserver/static/css/build.css \
   src/maasserver/static/js/bundle/maas-min.js \
   src/maasserver/static/js/bundle/maas-min.js.map \
   src/maasserver/static/js/bundle/vendor-min.js \
@@ -48,17 +38,28 @@ dbrun := bin/database --preserve run --
 mkfile_dir := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 nodejs_path := $(mkfile_dir)/include/nodejs/bin
 
-export PATH := $(nodejs_path):$(PATH)
+export GOPATH := $(shell go env GOPATH)
+export PATH := $(GOPATH)/bin:$(nodejs_path):$(PATH)
 
+# For anything we start, we want to hint as to its root directory.
+export MAAS_ROOT := $(CURDIR)/.run
 # For things that care, postgresfixture for example, we always want to
 # use the "maas" databases.
 export PGDATABASE := maas
 
-# For anything we start, we want to hint as to its root directory.
-export MAAS_ROOT := $(CURDIR)/.run
+# Check if a command is found on PATH. Raise an error if not, citing
+# the package to install. Return the command otherwise.
+# Usage: $(call available,<command>,<package>)
+define available
+  $(if $(shell which $(1)),$(1),$(error $(1) not found; \
+    install it with 'sudo apt install $(2)'))
+endef
+
+.DEFAULT_GOAL := build
 
 build: \
-  bin/buildout \
+  .run \
+  $(VENV) \
   bin/database \
   bin/maas \
   bin/maas-common \
@@ -71,123 +72,64 @@ build: \
   bin/test.region \
   bin/test.region.legacy \
   bin/test.testing \
-  bin/test.js \
-  bin/test.e2e \
   bin/test.parallel \
-  bin/py bin/ipy \
+  bin/postgresfixture \
+  bin/py \
+  machine-resources \
   pycharm
+.PHONY: build
 
 all: build doc
+.PHONY: all
+
+REQUIRED_DEPS_FILES = base build dev doc
+FORBIDDEN_DEPS_FILES = forbidden
+
+# list package names from a required-packages/ file
+list_required = $(shell sort -u required-packages/$1 | sed '/^\#/d')
 
 # Install all packages required for MAAS development & operation on
 # the system. This may prompt for a password.
 install-dependencies: release := $(shell lsb_release -c -s)
 install-dependencies:
-	sudo DEBIAN_FRONTEND=noninteractive apt-get -y \
-	    --no-install-recommends install $(shell sort -u \
-	        $(addprefix required-packages/,base build dev doc) | sed '/^\#/d')
-	sudo DEBIAN_FRONTEND=noninteractive apt-get -y \
-	    purge $(shell sort -u required-packages/forbidden | sed '/^\#/d')
-	if [ -x /usr/bin/snap ]; then sudo snap install --classic snapcraft; fi
-
-.gitignore:
-	sed 's:^[.]/:/:' $^ > $@
-
-configure-buildout:
-	utilities/configure-buildout
+	sudo DEBIAN_FRONTEND=noninteractive apt install --no-install-recommends -y \
+		$(foreach deps,$(REQUIRED_DEPS_FILES),$(call list_required,$(deps)))
+	sudo DEBIAN_FRONTEND=noninteractive apt purge -y \
+		$(foreach deps,$(FORBIDDEN_DEPS_FILES),$(call list_required,$(deps)))
+	if [ -x /usr/bin/snap ]; then cat required-packages/snaps | xargs -L1 sudo snap install; fi
+.PHONY: install-dependencies
 
 sudoers:
 	utilities/install-sudoers
 	utilities/grant-nmap-permissions
+.PHONY: sudoers
 
-bin/buildout: bootstrap-buildout.py
-	@utilities/configure-buildout --quiet
-	$(python) bootstrap-buildout.py --allow-site-packages
-	@touch --no-create $@  # Ensure it's newer than its dependencies.
+$(VENV): requirements.txt
+	python3 -m venv --system-site-packages --clear $@
+	$(VENV)/bin/pip install -r requirements.txt
 
-# buildout.cfg refers to .run and .run-e2e.
-buildout.cfg: .run .run-e2e
+bin/black bin/coverage \
+  bin/postgresfixture \
+  bin/maas bin/rackd bin/regiond \
+  bin/maas-region bin/maas-rack bin/maas-common \
+  bin/test.region bin/test.region.legacy \
+  bin/test.rack bin/test.cli \
+  bin/test.testing bin/test.parallel:
+	mkdir -p bin
+	ln -sf ../$(VENV)/$@ $@
 
-bin/database: bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install database
-	@touch --no-create $@
+bin/py:
+	ln -sf ../$(VENV)/bin/ipython $@
 
-bin/test.parallel: \
-  bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install parallel-test
-	@touch --no-create $@
+# bin/node-sass is needed for checking css.
+bin/test.testing: bin/node-sass
 
-bin/maas-region bin/regiond: \
-    bin/buildout buildout.cfg versions.cfg setup.py \
-    $(scss_output) $(javascript_output)
-	$(buildout) install region
-	@touch --no-create $@
-
-bin/test.region: \
-  bin/buildout buildout.cfg versions.cfg setup.py \
-  bin/maas-region bin/maas-rack bin/maas-common
-	$(buildout) install region-test
-	@touch --no-create $@
-
-bin/test.region.legacy: \
-    bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install region-test-legacy
-	@touch --no-create $@
-
-bin/maas: bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install cli
-	@touch --no-create $@
-
-bin/test.cli: bin/buildout buildout.cfg versions.cfg setup.py bin/maas
-	$(buildout) install cli-test
-	@touch --no-create $@
-
-bin/test.js: bin/karma bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install js-test
-	@touch --no-create $@
-
-bin/test.e2e: \
-    bin/protractor bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install e2e-test
-	@touch --no-create $@
-
-# bin/maas-region is needed for South migration tests. bin/flake8 is needed for
-# checking lint and bin/node-sass is needed for checking css.
-bin/test.testing: \
-  bin/maas-region bin/flake8 bin/node-sass bin/buildout \
-  buildout.cfg versions.cfg setup.py
-	$(buildout) install testing-test
-	@touch --no-create $@
-
-bin/maas-rack bin/rackd bin/maas-common: \
-  bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install rack
-	@touch --no-create $@
-
-bin/test.rack: \
-  bin/buildout buildout.cfg versions.cfg setup.py bin/maas-rack bin/py
-	$(buildout) install rack-test
-	@touch --no-create $@
-
-bin/flake8: bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install flake8
-	@touch --no-create $@
-
-bin/sphinx bin/sphinx-build: bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install sphinx
-	@touch --no-create $@
-
-bin/py bin/ipy: bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install repl
-	@touch --no-create bin/py bin/ipy
-
-bin/coverage: bin/buildout buildout.cfg versions.cfg setup.py
-	$(buildout) install coverage
-	@touch --no-create bin/coverage
+bin/database: bin/postgresfixture
+	ln -sf $(notdir $<) $@
 
 include/nodejs/bin/node:
 	mkdir -p include/nodejs
-	wget -O include/nodejs/nodejs.tar.gz https://nodejs.org/dist/v8.9.3/node-v8.9.3-linux-x64.tar.gz
+	wget -O include/nodejs/nodejs.tar.gz https://nodejs.org/dist/v8.10.0/node-v8.10.0-linux-x64.tar.gz
 	tar -C include/nodejs/ -xf include/nodejs/nodejs.tar.gz --strip-components=1
 
 include/nodejs/yarn.tar.gz:
@@ -203,13 +145,19 @@ bin/yarn: include/nodejs/bin/yarn
 	ln -sf ../include/nodejs/bin/yarn $@
 	@touch --no-create $@
 
+machine-resources-vendor:
+	$(MAKE) -C src/machine-resources vendor
+.PHONY: machine-resources-vendor
+
+machine-resources: machine-resources-vendor
+	$(MAKE) -C src/machine-resources build
+.PHONY: machine-resources
+
 node_modules: include/nodejs/bin/node bin/yarn
 	bin/yarn --frozen-lockfile
 	@touch --no-create $@
 
 define js_bins
-  bin/karma
-  bin/protractor
   bin/node-sass
   bin/webpack
 endef
@@ -229,26 +177,13 @@ define node_packages
   babel-loader@^8.0.0-beta.0
   glob
   jasmine-core@=2.99.1
-  karma
-  karma-chrome-launcher
-  karma-failed-reporter
-  karma-firefox-launcher
-  karma-jasmine
-  karma-ng-html2js-preprocessor
-  karma-opera-launcher
-  karma-phantomjs-launcher
-  karma-sourcemap-loader
   macaroon-bakery
   node-sass
-  phantomjs-prebuilt
   prop-types
-  protractor
   react
   react-dom
   react2angular
-  uglifyjs-webpack-plugin
   vanilla-framework
-  vanilla-framework-react
   webpack
   webpack-cli
   webpack-merge
@@ -257,6 +192,7 @@ endef
 force-yarn-update: bin/yarn
 	$(RM) package.json yarn.lock
 	bin/yarn add -D $(strip $(node_packages))
+.PHONY: force-yarn-update
 
 define test-scripts
   bin/test.cli
@@ -264,42 +200,58 @@ define test-scripts
   bin/test.region
   bin/test.region.legacy
   bin/test.testing
-  bin/test.js
 endef
 
 lxd:
 	utilities/configure-lxd-profile
 	utilities/create-lxd-bionic-image
+.PHONY: lxd
 
-test: bin/test.parallel bin/coverage
+test: test-js test-py
+.PHONY: test
+
+test-py: bin/test.parallel bin/coverage
 	@$(RM) .coverage .coverage.*
 	@bin/test.parallel --with-coverage --subprocess-per-core
 	@bin/coverage combine
+.PHONY: test-py
 
-test-js: bin/test.js javascript
-	@bin/test.js
+test-js: assets
+	bin/yarn test
+.PHONY: test-js
+
+test-js-watch: assets
+	bin/yarn test --watch
+.PHONY: test-js-watch
 
 test-serial: $(strip $(test-scripts))
 	@bin/maas-region makemigrations --dry-run --exit && exit 1 ||:
 	@$(RM) .coverage .coverage.* .failed
 	$(foreach test,$^,$(test-template);)
 	@test ! -f .failed
+.PHONY: test-serial
 
 test-failed: $(strip $(test-scripts))
 	@bin/maas-region makemigrations --dry-run --exit && exit 1 ||:
 	@$(RM) .coverage .coverage.* .failed
 	$(foreach test,$^,$(test-template-failed);)
 	@test ! -f .failed
+.PHONY: test-failed
 
 clean-failed:
 	$(RM) .noseids
+.PHONY: clean-failed
 
-src/maasserver/testing/initial.maas_test.sql: bin/database syncdb
-	bin/database --preserve run -- \
-	    pg_dump maas --no-owner --no-privileges \
-	        --format=plain > $@
+src/maasserver/testing/initial.maas_test.sql: bin/maas-region bin/database
+    # Run migrations without any triggers created.
+	$(dbrun) bin/maas-region dbupgrade --internal-no-triggers
+    # Data migration will create a notification, that will break tests. Want
+    # the database to be a clean schema.
+	$(dbrun) bin/maas-region shell -c "from maasserver.models.notification import Notification; Notification.objects.all().delete()"
+	$(dbrun) pg_dump maas --no-owner --no-privileges --format=plain > $@
 
 test-initial-data: src/maasserver/testing/initial.maas_test.sql
+.PHONY: test-initial-data
 
 define test-template
 $(test) --with-xunit --xunit-file=xunit.$(notdir $(test)).xml || touch .failed
@@ -314,12 +266,15 @@ endef
 smoke: lint bin/maas-region bin/test.rack
 	@bin/maas-region makemigrations --dry-run --exit && exit 1 ||:
 	@bin/test.rack --stop
+.PHONY: smoke
 
 test-serial+coverage: export NOSE_WITH_COVERAGE = 1
 test-serial+coverage: test-serial
+.PHONY: test-serial-coverage
 
 coverage-report: coverage/index.html
 	sensible-browser $< > /dev/null 2>&1 &
+.PHONY: coverage-report
 
 coverage.xml: bin/coverage .coverage
 	bin/coverage xml -o $@
@@ -334,13 +289,8 @@ coverage/index.html: bin/coverage .coverage
 .coverage:
 	@$(error Use `$(MAKE) test` to generate coverage)
 
-lint: \
-    lint-py lint-py-complexity lint-py-imports \
-    lint-js lint-doc lint-rst
-        # Only Unix line ends should be accepted
-	@find src/ -type f -exec file "{}" ";" | \
-	    awk '/CRLF/ { print $0; count++ } END {exit count}' || \
-	    (echo "Lint check failed; run make format to fix DOS linefeeds."; false)
+lint: lint-py lint-py-imports lint-py-linefeeds lint-js lint-go
+.PHONY: lint
 
 pocketlint = $(call available,pocketlint,python-pocket-lint)
 
@@ -349,36 +299,28 @@ lint-css: sources = src/maasserver/static/css
 lint-css:
 	@find $(sources) -type f \
 	    -print0 | xargs -r0 $(pocketlint) --max-length=120
+.PHONY: lint-css
 
-# Python lint checks are time-intensive, but flake8 now knows how to run
-# parallel jobs, and does so by default.
-lint-py: sources = setup.py src
-lint-py: bin/flake8
-	@find $(sources) -name '*.py' \
-	  ! -path '*/migrations/*' ! -path '*/south_migrations/*' -print0 \
-	    | xargs -r0 bin/flake8 --config=.flake8
-
-# Ignore tests when checking complexity. The maximum complexity ought to
-# be close to 10 but MAAS has many functions that are over that so we
-# start with a much higher number. Over time we can ratchet it down.
-lint-py-complexity: maximum=26
-lint-py-complexity: sources = setup.py src
-lint-py-complexity: bin/flake8
-	@find $(sources) -name '*.py' \
-	  ! -path '*/migrations/*' ! -path '*/south_migrations/*' \
-	  ! -path '*/tests/*' ! -path '*/testing/*' ! -name 'testing.py' \
-	  -print0 | xargs -r0 bin/flake8 --config=.flake8 --max-complexity=$(maximum)
+lint-py: sources = $(wildcard *.py contrib/*.py) src utilities etc
+lint-py: bin/black
+	@bin/black $(sources) --check
+.PHONY: lint-py
 
 # Statically check imports against policy.
 lint-py-imports: sources = setup.py src
 lint-py-imports:
 	@utilities/check-imports
-	@find $(sources) -name '*.py' \
-	  ! -path '*/migrations/*' ! -path '*/south_migrations/*' \
+	@find $(sources) -type f -name '*.py' \
+	  ! -path '*/migrations/*' \
 	  -print0 | xargs -r0 utilities/find-early-imports
+.PHONY: lint-py-imports
 
-lint-doc:
-	@utilities/doc-lint
+# Only Unix line ends should be accepted
+lint-py-linefeeds:
+	@find src/ -name \*.py -exec file "{}" ";" | \
+	    awk '/CRLF/ { print $0; count++ } END {exit count}' || \
+	    (echo "Lint check failed; run make format to fix DOS linefeeds."; false)
+.PHONY: lint-py-linefeeds
 
 # JavaScript lint is checked in parallel for speed.  The -n20 -P4 setting
 # worked well on a multicore SSD machine with the files cached, roughly
@@ -389,88 +331,98 @@ lint-js:
 		-not -path '*-min.js' -a \
 	    '(' -name '*.html' -o -name '*.js' ')' -print0 \
 		| xargs -r0 -n20 -P4 $(pocketlint)
+		bin/yarn lint
+		bin/yarn prettier-check
+.PHONY: lint-js
 
-# Apply automated formatting to all Python files.
-format: sources = $(wildcard *.py contrib/*.py) src utilities etc
-format:
-	@find $(sources) -name '*.py' -print0 | xargs -r0 utilities/format-imports
-	@find src/ -type f -exec file "{}" ";" | grep CRLF | cut -d ':' -f1 | xargs dos2unix
+# Go fmt
+lint-go:
+	@find src/ \( -name pkg -o -name vendor \) -prune -o -name '*.go' -exec gofmt -l {} + | \
+		tee /tmp/gofmt.lint
+	@test ! -s /tmp/gofmt.lint
+.PHONY: lint-go
+
+format.parallel:
+	@$(MAKE) -s -j format
+.PHONY: format.parallel
+
+# Apply automated formatting to all Python, Sass and Javascript files.
+format: format-python format-js format-go
+.PHONY: format
+
+format-python: sources = $(wildcard *.py contrib/*.py) src utilities etc
+format-python: bin/black
+	@bin/black -q $(sources)
+.PHONY: format-python
+
+format-js: bin/yarn
+	@bin/yarn -s prettier --loglevel warn
+.PHONY: format-js
+
+format-go:
+	@find src/ -name '*.go' -execdir go fmt {} +
+.PHONY: format-go
 
 check: clean test
+.PHONY: check
 
-docs/api.rst: bin/maas-region src/maasserver/api/doc_handler.py syncdb
+api-docs.rst: bin/maas-region src/maasserver/api/doc_handler.py syncdb
 	bin/maas-region generate_api_doc > $@
 
 sampledata: bin/maas-region bin/database syncdb
 	$(dbrun) bin/maas-region generate_sample_data
+.PHONY: sampledata
 
-doc: bin/sphinx docs/api.rst
-	bin/sphinx
+doc: api-docs.rst
+.PHONY: doc
 
-docs/_build/html/index.html: doc
-
-doc-browse: docs/_build/html/index.html
-	sensible-browser $< > /dev/null 2>&1 &
-
-doc-with-versions: bin/sphinx docs/api.rst
-	$(MAKE) -C docs/_build SPHINXOPTS="-A add_version_switcher=true" html
-
-man: $(patsubst docs/man/%.rst,man/%,$(wildcard docs/man/*.rst))
-
-man/%: docs/man/%.rst | bin/sphinx-build
-	bin/sphinx-build -b man docs man $^
-
-.run .run-e2e: run-skel
+.run: run-skel
 	@cp --archive --verbose $^ $@
 
 .idea: contrib/pycharm
 	@cp --archive --verbose $^ $@
 
 pycharm: .idea
+.PHONY: pycharm
 
-styles: $(scss_output)
+assets: node_modules $(asset_output)
+.PHONY: assets
 
-force-styles: clean-styles $(scss_output)
+force-assets: clean-assets node_modules $(asset_output)
+.PHONY: force-assets
 
-$(scss_output): bin/node-sass $(scss_input) $(scss_deps)
-	bin/node-sass --include-path=src/maasserver/static/scss \
-	    --output-style compressed $(scss_input) -o $(dir $@)
+lander-javascript: force-assets
+	git update-index -q --no-assume-unchanged $(strip $(asset_output)) 2> /dev/null || true
+	git add -f $(strip $(asset_output)) 2> /dev/null || true
+.PHONY: lander-javascript
 
-clean-styles:
-	$(RM) $(scss_output)
-
-javascript: node_modules $(javascript_output)
-
-force-javascript: clean-javascript node_modules $(javascript_output)
-
-lander-javascript: force-javascript
-	git update-index -q --no-assume-unchanged $(strip $(javascript_output)) 2> /dev/null || true
-	git add -f $(strip $(javascript_output)) 2> /dev/null || true
-
-lander-styles: force-styles node_modules $(scss_output)
-	git update-index -q --no-assume-unchanged $(strip $(scss_output)) 2> /dev/null || true
-	git add -f $(strip $(scss_output)) 2> /dev/null || true
+lander-styles: lander-javascript
+.PHONY: lander-styles
 
 # The $(subst ...) uses a pattern rule to ensure Webpack runs just once,
 # even if all four output files are out-of-date.
-$(subst .,%,$(javascript_output)): $(javascript_deps)
-	node_modules/.bin/webpack
-	@touch --no-create $(strip $(javascript_output))
-	@git update-index -q --assume-unchanged $(strip $(javascript_output)) 2> /dev/null || true
+$(subst .,%,$(asset_output)): node_modules $(asset_deps)
+	bin/yarn build
+	@touch --no-create $(strip $(asset_output))
+	@git update-index -q --assume-unchanged $(strip $(asset_output)) 2> /dev/null || true
 
-clean-javascript:
+clean-assets:
 	$(RM) -r src/maasserver/static/js/bundle
+	$(RM)  -r src/maasserver/static/css
+.PHONY: clean-assets
 
-clean: stop clean-failed
+watch-assets:
+	bin/yarn watch
+.PHONY: watch-assets
+
+clean: stop clean-failed clean-assets
 	find . -type f -name '*.py[co]' -print0 | xargs -r0 $(RM)
 	find . -type d -name '__pycache__' -print0 | xargs -r0 $(RM) -r
 	find . -type f -name '*~' -print0 | xargs -r0 $(RM)
 	$(RM) -r media/demo/* media/development media/development.*
 	$(RM) src/maasserver/data/templates.py
 	$(RM) *.log
-	$(RM) docs/api.rst
-	$(RM) -r docs/_autosummary docs/_build
-	$(RM) -r man/.doctrees
+	$(RM) api-docs.rst
 	$(RM) .coverage .coverage.* coverage.xml
 	$(RM) -r coverage
 	$(RM) -r .hypothesis
@@ -480,76 +432,31 @@ clean: stop clean-failed
 	$(RM) tags TAGS .installed.cfg
 	$(RM) -r *.egg *.egg-info src/*.egg-info
 	$(RM) -r services/*/supervise
-	$(RM) -r .run .run-e2e
+	$(RM) -r .run
 	$(RM) -r .idea
 	$(RM) xunit.*.xml
 	$(RM) .failed
+	$(MAKE) -C src/machine-resources clean
+	$(RM) -r $(VENV)
+.PHONY: clean
 
 clean+db: clean
 	while fuser db --kill -TERM; do sleep 1; done
 	$(RM) -r db
 	$(RM) .db.lock
-
-distclean: clean
-	$(warning 'distclean' is deprecated; use 'clean')
+.PHONY: clean+db
 
 harness: bin/maas-region bin/database
-	$(dbrun) bin/maas-region shell \
-	  --settings=maasserver.djangosettings.demo
+	$(dbrun) bin/maas-region shell --settings=maasserver.djangosettings.demo
+.PHONY: harness
 
 dbharness: bin/database
 	bin/database --preserve shell
+.PHONY: dbharness
 
 syncdb: bin/maas-region bin/database
 	$(dbrun) bin/maas-region dbupgrade
-
-define phony_targets
-  build
-  check
-  clean
-  clean+db
-  clean-failed
-  clean-javascript
-  clean-styles
-  configure-buildout
-  coverage-report
-  dbharness
-  distclean
-  doc
-  doc-browse
-  force-styles
-  force-javascript
-  force-yarn-update
-  format
-  harness
-  install-dependencies
-  javascript
-  lander-javascript
-  lander-styles
-  lint
-  lint-css
-  lint-doc
-  lint-js
-  lint-py
-  lint-py-complexity
-  lint-py-imports
-  lint-rst
-  lxd
-  man
-  print-%
-  sampledata
-  smoke
-  styles
-  sudoers
-  syncdb
-  sync-dev-snap
-  test
-  test+lxd
-  test-failed
-  test-initial-data
-  test-serial
-  test-serial+coverage
-endef
+.PHONY: syncdb
 
 #
 # Development services.
@@ -570,7 +477,6 @@ define service_template
 $(1)-region: $(patsubst %,services/%/@$(1),$(service_names_region))
 $(1)-rack: $(patsubst %,services/%/@$(1),$(service_names_rack))
 $(1): $(1)-region $(1)-rack
-phony_services_targets += $(1)-region $(1)-rack $(1)
 endef
 
 # Expand out aggregate service targets using `service_template`.
@@ -584,14 +490,13 @@ $(eval $(call service_template,supervise))
 # The `run` targets do not fit into the mould of the others.
 run-region:
 	@services/run $(service_names_region)
+.PHONY: run-region
 run-rack:
 	@services/run $(service_names_rack)
+.PHONY: run-rack
 run:
 	@services/run $(service_names_all)
-
-phony_services_targets += run-region run-rack run
-
-phony_services_targets += run+regiond
+.PHONY: run
 
 # Convenient variables and functions for service control.
 
@@ -659,26 +564,40 @@ packaging-repo = https://git.launchpad.net/maas/
 packaging-branch = "packaging"
 
 packaging-build-area := $(abspath ../build-area)
-packaging-version = $(shell \
-    utilities/calc-snap-version | sed s/[-]snap//)
+packaging-version := $(shell utilities/package-version)
 tmp_changelog := $(shell tempfile)
 packaging-dir := maas_$(packaging-version)
+packaging-orig-tar := $(packaging-dir).orig.tar
 packaging-orig-targz := $(packaging-dir).orig.tar.gz
+
+machine_resources_vendor := src/machine-resources/src/machine-resources/vendor
 
 -packaging-clean:
 	rm -rf $(packaging-build-area)
 	mkdir -p $(packaging-build-area)
+.PHONY: -packaging-clean
 
 -packaging-export-orig: $(packaging-build-area)
-	git archive --format=tar.gz $(packaging-export-extra) \
+	git archive --format=tar $(packaging-export-extra) \
             --prefix=$(packaging-dir)/ \
-	    -o $(packaging-build-area)/$(packaging-orig-targz) HEAD
+	    -o $(packaging-build-area)/$(packaging-orig-tar) HEAD
+	$(MAKE) machine-resources-vendor
+	tar -rf $(packaging-build-area)/$(packaging-orig-tar) $(machine_resources_vendor) \
+		--transform 's,^,$(packaging-dir)/,'
+	gzip -f $(packaging-build-area)/$(packaging-orig-tar)
+.PHONY: -packaging-export-orig
 
 -packaging-export-orig-uncommitted: $(packaging-build-area)
 	git ls-files --others --exclude-standard --cached | grep -v '^debian' | \
-	    xargs tar --transform 's,^,$(packaging-dir)/,' -czf $(packaging-build-area)/$(packaging-orig-targz)
+	    xargs tar --transform 's,^,$(packaging-dir)/,' -cf $(packaging-build-area)/$(packaging-orig-tar)
+	$(MAKE) machine-resources-vendor
+	tar -rf $(packaging-build-area)/$(packaging-orig-tar) $(machine_resources_vendor) \
+		--transform 's,^,$(packaging-dir)/,'
+	gzip -f $(packaging-build-area)/$(packaging-orig-tar)
+.PHONY: -packaging-export-orig-uncommitted
 
 -packaging-export: -packaging-export-orig$(if $(export-uncommitted),-uncommitted,)
+.PHONY: -packaging-export
 
 -package-tree: -packaging-export
 	(cd $(packaging-build-area) && tar xfz $(packaging-orig-targz))
@@ -687,43 +606,55 @@ packaging-orig-targz := $(packaging-dir).orig.tar.gz
 	    > $(tmp_changelog)
 	tail -n +2 debian/changelog >> $(tmp_changelog)
 	mv $(tmp_changelog) $(packaging-build-area)/$(packaging-dir)/debian/changelog
+.PHONY: -package-tree
 
-package: javascript -packaging-clean -package-tree
+package-tree: assets -packaging-clean -package-tree
+
+package: package-tree
 	(cd $(packaging-build-area)/$(packaging-dir) && debuild -uc -us)
 	@echo Binary packages built, see $(packaging-build-area).
+.PHONY: package
 
 # To build binary packages from uncommitted changes call "make package-dev".
 package-dev:
 	make export-uncommitted=yes package
+.PHONY: package-dev
 
 source-package: -package-tree
 	(cd $(packaging-build-area)/$(packaging-dir) && debuild -S -uc -us)
 	@echo Source package built, see $(packaging-build-area).
+.PHONY: source-package
 
 # To build source packages from uncommitted changes call "make package-dev".
 source-package-dev:
 	make export-uncommitted=yes source-package
+.PHONY: source-package-dev
 
 # To rebuild packages (i.e. from a clean slate):
 package-rebuild: package-clean package
+.PHONY: package-rebuild
 
 package-dev-rebuild: package-clean package-dev
+.PHONY: package--dev-rebuild
 
 source-package-rebuild: source-package-clean source-package
+.PHONY: source-package-rebuild
 
 source-package-dev-rebuild: source-package-clean source-package-dev
+.PHONY: source-package-dev-rebuild
 
 # To clean built packages away:
 package-clean: patterns := *.deb *.udeb *.dsc *.build *.changes
 package-clean: patterns += *.debian.tar.xz *.orig.tar.gz
 package-clean:
 	@$(RM) -v $(addprefix $(packaging-build-area)/,$(patterns))
+.PHONY: package-clean
 
 source-package-clean: patterns := *.dsc *.build *.changes
 source-package-clean: patterns += *.debian.tar.xz *.orig.tar.gz
 source-package-clean:
 	@$(RM) -v $(addprefix $(packaging-build-area)/,$(patterns))
-
+.PHONY: source-package-clean
 
 # Debugging target. Allows printing of any variable.
 # As an example, try:
@@ -731,46 +662,21 @@ source-package-clean:
 print-%:
 	@echo $* = $($*)
 
-define phony_package_targets
-  -packaging-export-orig
-  -packaging-export-orig-uncommitted
-  -packaging-export
-  -packaging-fetch
-  -packaging-pull
-  -packaging-refresh
-  -package-tree
-  package
-  package-clean
-  package-dev
-  package-dev-rebuild
-  package-rebuild
-  source-package
-  source-package-clean
-  source-package-dev
-  source-package-dev-rebuild
-  source-package-rebuild
-endef
-
 #
 # Snap building
 #
 
 snap-clean:
 	$(snapcraft) clean
+.PHONY: snap-clean
 
 snap:
 	$(snapcraft)
-
-define phony_snap_targets
-	snap
-	snap-clean
-endef
-
+.PHONY: snap
 
 #
 # Helpers for using the snap for development testing.
 #
-
 
 build/dev-snap: ## Check out a clean version of the working tree.
 	git checkout-index -a --prefix build/dev-snap/
@@ -778,61 +684,13 @@ build/dev-snap: ## Check out a clean version of the working tree.
 build/dev-snap/prime: build/dev-snap
 	cd build/dev-snap && $(snapcraft) prime --destructive-mode
 
+sync-dev-snap: RSYNC=rsync -v -r -u -l -t -W -L
 sync-dev-snap: build/dev-snap/prime
-	rsync -v --exclude 'maastesting' --exclude 'tests' --exclude 'testing' \
-		--exclude '*.pyc' --exclude '__pycache__' -r -u -l -t -W -L \
+	$(RSYNC) --exclude 'maastesting' --exclude 'tests' --exclude 'testing' \
+		--exclude 'machine-resources' --exclude '*.pyc' \
+		--exclude '__pycache__' \
 		src/ build/dev-snap/prime/lib/python3.6/site-packages/
-	rsync -v -r -u -l -t -W -L \
+	$(RSYNC) \
 		src/maasserver/static/ build/dev-snap/prime/usr/share/maas/web/static/
-
-#
-# Phony stuff.
-#
-
-define phony
-  $(phony_package_targets)
-  $(phony_services_targets)
-  $(phony_snap_targets)
-  $(phony_targets)
-endef
-
-phony := $(sort $(strip $(phony)))
-
-.PHONY: $(phony) FORCE
-
-#
-# Secondary stuff.
-#
-# These are intermediate files that we want to keep around in the event
-# that they get built. By declaring them here we're also telling Make
-# that their absense is okay if a rule target is newer than the rule's
-# other prerequisites; i.e. don't build them.
-#
-# For example, converting foo.scss to foo.css might require bin/node-sass. If
-# foo.css is newer than foo.scss we know that we don't need to perform that
-# conversion, and hence don't need bin/node-sass. We declare bin/node-sass as
-# secondary so that Make knows this too.
-#
-
-define secondary_binaries
-  bin/py bin/buildout
-  bin/node-sass
-  bin/webpack
-  bin/sphinx bin/sphinx-build
-endef
-
-secondary = $(sort $(strip $(secondary_binaries)))
-
-.SECONDARY: $(secondary)
-
-#
-# Functions.
-#
-
-# Check if a command is found on PATH. Raise an error if not, citing
-# the package to install. Return the command otherwise.
-# Usage: $(call available,<command>,<package>)
-define available
-  $(if $(shell which $(1)),$(1),$(error $(1) not found; \
-    install it with 'sudo apt-get install $(2)'))
-endef
+	$(RSYNC) snap/local/tree/ build/dev-snap/prime
+.PHONY: sync-dev-snap

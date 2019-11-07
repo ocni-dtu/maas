@@ -1,8 +1,50 @@
-maas (2.6.0~alpha1-0ubuntu1) UNRELEASED; urgency=medium
+maas (2.7.0~alpha1-0ubuntu1) UNRELEASED; urgency=medium
 
   * UNRELEASED
 
- -- Andres Rodriguez <andreserl@ubuntu.com>  Thu, 24 Jan 2019 09:02:55 -0500
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Thu, 30 May 2019 16:31:03 -0400
+
+maas (2.6.0~rc1-7799-g70b0fe161-0ubuntu1) eoan; urgency=medium
+
+  * New upstream release, MAAS 2.6.0 RC 1.
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Thu, 30 May 2019 08:45:21 -0400
+
+maas (2.6.0~beta4-7743-g27b04aaf3-0ubuntu1) eoan; urgency=medium
+
+  * New upstream release, MAAS 2.6.0 beta 4.
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Fri, 10 May 2019 16:50:45 -0400
+
+maas (2.6.0~beta3-7711-gb79157e92-0ubuntu1) eoan; urgency=medium
+
+  * New upstream release, MAAS 2.6.0 beta 3.
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Fri, 03 May 2019 17:37:32 -0400
+
+maas (2.6.0~beta2-7695-g691e14ea3-0ubuntu1) disco; urgency=medium
+
+  * New upstream release, MAAS 2.6.0 beta 2.
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Sat, 27 Apr 2019 16:45:32 -0400
+
+maas (2.6.0~beta1-7673-g850a92f90-0ubuntu1) disco; urgency=medium
+
+  * New upstream release, MAAS 2.6.0 beta 1.
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Wed, 17 Apr 2019 16:24:55 -0400
+
+maas (2.6.0~alpha2-7640-g9c8072b21-0ubuntu1~19.04.1) disco; urgency=medium
+
+  * New upstream release, MAAS 2.6.0 alpha 2
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Thu, 28 Mar 2019 10:41:15 -0400
+
+maas (2.6.0~alpha1-7593-gcca18b743-0ubuntu1~18.10.1) cosmic; urgency=medium
+
+  * New upstream release, MAAS 2.6.0 alpha 1
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Tue, 12 Mar 2019 21:42:01 -0400
 
 maas (2.5.0-7442-gdf68e30a5-0ubuntu1) cosmic; urgency=medium
 

@@ -3,10 +3,7 @@
 
 """Testing utilities for the region event-loop."""
 
-__all__ = [
-    "RegionEventLoopFixture",
-    "RunningEventLoopFixture",
-]
+__all__ = ["RegionEventLoopFixture", "RunningEventLoopFixture"]
 
 from crochet import wait_for
 from fixtures import Fixture
@@ -38,7 +35,8 @@ class RegionEventLoopFixture(Fixture):
         if loop.services.running:
             raise RuntimeError(
                 "The event-loop has been left running; this fixture cannot "
-                "make a reasonable decision about what to do next.")
+                "make a reasonable decision about what to do next."
+            )
         # Don't proceed if any services are registered.
         services = list(loop.services)
         if services != []:
@@ -46,16 +44,20 @@ class RegionEventLoopFixture(Fixture):
                 "One or more services are registered; this fixture cannot "
                 "make a reasonable decision about what to do next.  "
                 "The services are: %s."
-                % ', '.join(service.name for service in services))
+                % ", ".join(service.name for service in services)
+            )
 
     def resetStartUp(self):
         eventloop.loop.prepare = self.original_prepare
+        eventloop.loop.services._set_globals = self.original_set_globals
 
     def setUp(self):
         super(RegionEventLoopFixture, self).setUp()
         # Patch start_up in the eventloop.
         self.original_prepare = eventloop.loop.prepare
+        self.original_set_globals = eventloop.loop.services._set_globals
         eventloop.loop.prepare = lambda: defer.succeed(None)
+        eventloop.loop.services._set_globals = lambda: defer.succeed(None)
         # Check that the event-loop is dormant and clean.
         self.checkEventLoopClean()
         # Ensure the event-loop will be left in a consistent state.
@@ -98,16 +100,20 @@ class RunningEventLoopFixture(Fixture):
         if loop.services.running:
             raise RuntimeError(
                 "The event-loop has been left running; this fixture cannot "
-                "make a reasonable decision about what to do next.")
+                "make a reasonable decision about what to do next."
+            )
 
     def resetStartUp(self):
         eventloop.loop.prepare = self.original_prepare
+        eventloop.loop.services._set_globals = self.original_set_globals
 
     def setUp(self):
         super(RunningEventLoopFixture, self).setUp()
         # Patch start_up in the eventloop.
         self.original_prepare = eventloop.loop.prepare
+        self.original_set_globals = eventloop.loop.services._set_globals
         eventloop.loop.prepare = lambda: defer.succeed(None)
+        eventloop.loop.services._set_globals = lambda: defer.succeed(None)
         # Check that the event-loop is dormant and clean.
         self.checkEventLoopClean()
         # Check that the event-loop will be left dormant and clean.

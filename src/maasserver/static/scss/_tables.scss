@@ -1,798 +1,88 @@
-@mixin maas-table-widths {
-  $breakpoint-first: 600px;
-  $breakpoint-second: 900px;
-  $breakpoint-third: 1030px;
-  $breakpoint-fourth: 1360px;
-
-  @mixin breakpoint-widths(
-    $width-one,
-    $width-two: $width-one,
-    $width-three: $width-two,
-    $width-four: $width-three,
-    $width-five: $width-four
-  ) {
-    @media (max-width: $breakpoint-first - 1px) {
-      @if $width-one == 0 {
-        display: none !important;
-      } @else {
-        width: $width-one;
-      }
-    }
-
-    @media (min-width: $breakpoint-first) and (max-width: $breakpoint-second - 1px) {
-      @if $width-two == 0 {
-        display: none !important;
-      } @else {
-        width: $width-two;
-      }
-    }
-
-    @media (min-width: $breakpoint-second) and (max-width: $breakpoint-third - 1px) {
-      @if $width-three == 0 {
-        display: none !important;
-      } @else {
-        width: $width-three;
-      }
-    }
-
-    @media (min-width: $breakpoint-third) and (max-width: $breakpoint-fourth - 1px) {
-      @if $width-four == 0 {
-        display: none !important;
-      } @else {
-        width: $width-four;
-      }
-    }
-
-    @media (min-width: $breakpoint-fourth) {
-      @if $width-five == 0 {
-        display: none !important;
-      } @else {
-        width: $width-five;
-      }
-    }
-  }
-
-  .p-table__row {
-    .p-table--machines tbody &:hover {
-      background-color: $color-x-light;
-      box-shadow: 0 1px 3px 0 transparentize($color-dark, .8);
-
-      .p-power-menu__toggle {
-        display: inline-block;
-      }
-    }
-
-    &--muted {
-      background: $color-light;
-    }
-  }
-
-  .p-table--network-discovery {
-    $chevron-cell-width: 50px;
-
-    tr {
-      justify-content: space-between;
-    }
-
-    th, td {
-      flex: 0 0 auto;
-    }
-
-    &__name {
-      width: 15%;
-    }
-
-    &__mac {
-      width: 20%;
-    }
-
-    &__ip {
-      width: 25%;
-    }
-
-    &__rack {
-      width: 15%;
-    }
-
-    &__last-seen {
-      width: calc(25% - #{$chevron-cell-width});
-    }
-
-    &__chevron {
-      flex: 0 0 auto;
-      width: $chevron-cell-width; // chevron needs a static width
-    }
-  }
-
-  .p-table--pods {
-    .p-table__row {
-      .p-table__cell {
-        &:nth-child(1) {
-          width: 18%;
-        }
-
-        &:nth-child(2) {
-          width: 9%;
-        }
-
-        &:nth-child(3) {
-          width: 14%;
-        }
-
-        &:nth-child(4) {
-          width: 14%;
-        }
-
-        &:nth-child(5) {
-          width: 10%;
-        }
-
-        &:nth-child(6) {
-          width: 14%;
-        }
-
-        &:nth-child(7) {
-          width: 15%;
-        }
-      }
-    }
-  }
-
-  .p-table--pod-networking-config,
-  .p-table--pod-storage-config {
-    input {
-        // overriding min-width to make inputs fit within container
-        min-width: auto;
-        @extend %u-input-min-margin--bottom;
-    }
-  }
-
-  $border-thickness: $px;
-  $icon-margin-right: $sph-intra--condensed;
-  $icon-button-width: $icon-margin-right + 2 * ($border-thickness + $vanilla-2-icon-button-side-padding) + map-get($icon-sizes, default);
-
-
-  .p-table--pod-networking-config {
-    select {
-        @extend %u-input-min-margin--bottom;
-    }
-
-    @media (min-width: $breakpoint-small) {
-        margin-bottom: 0;
-
-        .p-table__row {
-            th, td {
-                &:nth-child(1) {
-                  width: $icon-button-width;
-                }
-
-                &:nth-child(2) {
-                    width: 10%;
-                }
-
-                &:nth-child(3) {
-                    width: 25%;
-                }
-
-                &:nth-child(4) {
-                    width: 15%;
-                }
-
-                &:nth-child(5) {
-                    width: 23%;
-                }
-
-                &:nth-child(6) {
-                    width: 10%;
-                }
-
-                &:nth-child(7) {
-                    width: 12%;
-                }
-
-                &:nth-child(8) {
-                    width: 5%;
-                }
-            }
-        }
-    }
-  }
-
-  .p-table--pod-storage-config {
-    @media (min-width: $breakpoint-small) {
-      margin-bottom: 0;
-
-      .p-table__row {
-        th, td {
-          &:nth-child(1) {
-              width: $icon-button-width;
-          }
-
-          &:nth-child(2) {
-              width: 10%;
-          }
-
-          &:nth-child(3) {
-             width: 40%;
-          }
-
-          &:nth-child(4) {
-              width: 40%;
-          }
-
-          &:nth-child(5) {
-              width: 10%;
-          }
-        }
-      }
-    }
-  }
-
-
-  .p-table--pod-networking-config--message {
-    margin-left: 35%;
-  }
-
-  .p-table--devices {
-    .p-table__row {
-      .p-table__cell {
-        &:nth-child(1) {
-          width: 33%;
-        }
-
-        &:nth-child(2) {
-          width: 17%;
-        }
-
-        &:nth-child(3) {
-          width: 15%;
-
-          @media (max-width: 1000px) {
-            display: none !important;
-          }
-        }
-
-        &:nth-child(4) {
-          width: 20%;
-        }
-
-        &:nth-child(5) {
-          width: 15%;
-        }
-      }
-    }
-  }
-
-  .p-table--controllers {
-    .p-table__row {
-      .p-table__cell {
-        &:nth-child(1) {
-          width: 30%;
-        }
-
-        &:nth-child(2) {
-          width: 10%;
-        }
-
-        &:nth-child(3) {
-          width: 20%;
-        }
-
-        &:nth-child(4) {
-          width: 15%;
-        }
-
-        &:nth-child(5) {
-          width: 20%;
-        }
-
-        &:nth-child(6) {
-          width: 15%;
-        }
-      }
-    }
-  }
-
-  .p-table--images {
-    .p-table__row {
-      .p-table__cell {
-        &:nth-child(1) {
-          width: 20%;
-        }
-
-        &:nth-child(2) {
-          width: 15%;
-        }
-
-        &:nth-child(3) {
-          width: 15%;
-        }
-
-        &:nth-child(4) {
-          width: 35%;
-        }
-
-        &:nth-child(5) {
-          width: 15%;
-        }
-      }
-    }
-  }
-
-  .p-table--disks-partitions {
-    .p-table__row {
-      .p-table__cell {
-        &:nth-child(1) {
-          width: 15%;
-        }
-
-        &:nth-child(2) {
-          width: 15%;
-        }
-
-        &:nth-child(3) {
-          width: 7%;
-        }
-
-        &:nth-child(4) {
-          width: 9%;
-        }
-
-        &:nth-child(5) {
-          width: 12%;
-        }
-
-        &:nth-child(6) {
-          width: 10%;
-        }
-
-        &:nth-child(7) {
-          width: 12%;
-        }
-
-        &:nth-child(8) {
-          width: 10%;
-        }
-
-        &:nth-child(9) {
-          width: 10%;
-        }
-      }
-    }
-  }
-
-  .p-table--machines {
-    .p-table__row {
-      td {
-        vertical-align: top;
-      }
-
-      .p-table__col--name {
-        @include breakpoint-widths(46%, 30%, 22%, 20%, 17%);
-        position: relative;
-
-        .p-tooltip {
-          position: static;
-        }
-      }
-
-      .p-table__col--power {
-        @include breakpoint-widths(8%, 8%, 4%, 10%, 8%);
-      }
-
-      .p-table__col--status {
-        @include breakpoint-widths(46%, 44%, 22%, 22%, 19%);
-        position: relative;
-
-        .p-tooltip {
-          position: static;
-        }
-      }
-
-      .p-table__col--owner {
-        @include breakpoint-widths(0, 18%, 8%, 10%, 9%);
-      }
-
-      .p-table__col--pool {
-        @include breakpoint-widths(0, 0, 0, 0, 7%);
-      }
-
-      .p-table__col--zone {
-        @include breakpoint-widths(0, 0, 0, 10%, 9%);
-      }
-
-      .p-table__col--fabric {
-        @include breakpoint-widths(0, 0, 0, 0, 8%);
-      }
-
-      .p-table__col--cores {
-        @include breakpoint-widths(0, 0, 10%, 6%, 5%);
-      }
-
-      .p-table__col--ram {
-        @include breakpoint-widths(0, 0, 12%, 8%, 7%);
-      }
-
-      .p-table__col--disks {
-        @include breakpoint-widths(0, 0, 10%, 6%, 5%);
-      }
-
-      .p-table__col--storage {
-        @include breakpoint-widths(0, 0, 10%, 8%, 6%);
-      }
-    }
-
-    .p-icon--placeholder {
-      @extend %icon;
-      height: map-get($icon-sizes, default);
-      margin-right: $sph-intra--condensed;
-      width: map-get($icon-sizes, default);
-    }
-
-    .p-tooltip__message--latest-event {
-      max-width: 500px;
-      white-space: inherit;
-    }
-  }
-
-  .p-table--controller-interfaces {
-    .p-table--is-device {
-      th, td {
-        &:nth-child(1) {
-          width: 30%;
-        }
-        &:nth-child(2) {
-          width: 25%;
-        }
-        &:nth-child(3) {
-          width: 25%;
-        }
-        &:nth-child(4) {
-          width: 15%;
-        }
-      }
-    }
-
-    .p-table--is-not-device {
-      th, td {
-        &:nth-child(1) {
-          width: 20%;
-        }
-        &:nth-child(2) {
-          width: 6%;
-        }
-        &:nth-child(3) {
-          width: 10%;
-        }
-        &:nth-child(4) {
-          width: 14%;
-        }
-        &:nth-child(5) {
-          width: 16%;
-        }
-        &:nth-child(6) {
-          width: 28%;
-        }
-        &:nth-child(7) {
-          width: 6%;
-        }
-      }
-    }
-  }
-
-  .p-table--controllers-commissioning {
-    .p-table__row {
-      th, td {
-        &:nth-child(1) {
-          width: 15%;
-        }
-        &:nth-child(2) {
-          width: 15%;
-        }
-        &:nth-child(3) {
-          width: 20%;
-        }
-        &:nth-child(4) {
-          width: 20%;
-        }
-        &:nth-child(5) {
-          width: 25%;
-        }
-        &:nth-child(6) {
-          width: 5%;
-        }
-      }
-    }
-  }
-  .p-table--controller-vlans {
-    .p-table__row {
-      @media (min-width: $breakpoint-small) {
-        th, td {
-          &:nth-child(1) {
-            width: 15%;
-          }
-          &:nth-child(2) {
-            width: 15%;
-          }
-          &:nth-child(3) {
-            width: 10%;
-          }
-          &:nth-child(4) {
-            width: 20%;
-          }
-          &:nth-child(5) {
-            width: 20%;
-          }
-          &:nth-child(6) {
-            width: 20%;
-          }
-        }
-      }
-    }
-  }
-
-  .p-table--create-raid {
-    &__name {
-      @media (max-width: $breakpoint-medium) {
-        width: 50%;
-      }
-      @media (min-width: $breakpoint-medium) {
-        width: 30%;
-      }
-    }
-    &__size {
-      width: 10%;
-    }
-    &__type {
-      width: 20%;
-    }
-    &__active {
-      width: 10%;
-    }
-    &__spare {
-      width: 10%;
-    }
-  }
-
-  .p-table--create-volume-group {
-    &__name {
-      @media (max-width: $breakpoint-medium) {
-        width: 50%;
-      }
-      @media (min-width: $breakpoint-medium) {
-        width: 30%;
-      }
-    }
-    &__size {
-      width: 30%;
-    }
-    &__type {
-      width: 20%;
-    }
-    &__empty {
-      width: 10%;
-    }
-  }
-  .p-table--bcache {
-    &__name {
-      @media (max-width: $breakpoint-medium) {
-        width: 50%;
-      }
-      @media (min-width: $breakpoint-medium) {
-        width: 30%;
-      }
-    }
-    &__size {
-      width: 30%;
-    }
-    &__type {
-      width: 20%;
-    }
-    &__empty {
-      width: 10%;
-    }
-  }
-
-  $checkbox-space: 1rem + $sph-intra;
-  $icon-space: map-get($icon-sizes, default) + $sph-intra--condensed;
-
-  .p-double-row {
-    overflow: visible;
-
-    %p-double-row__icon-container {
-      display: block;
-      float: left;
-      width: map-get($icon-sizes, default);
-    }
-
-    %p-double-row__row {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-    }
-
-    .p-double-row__checkbox {
-      @extend %p-double-row__icon-container;
-      margin-right: $sph-intra;
-    }
-
-    .p-double-row__icon-container {
-      @extend %p-double-row__icon-container;
-      margin-right: $sph-intra--condensed;
-    }
-
-    .p-double-row__rows-container--icon {
-      float: left;
-      width: calc(100% - #{$icon-space});
-    }
-
-    .p-double-row__rows-container--checkbox {
-      float: left;
-      width: calc(100% - #{$checkbox-space});
-    }
-
-    .p-double-row__main-row {
-      @extend %p-double-row__row;
-    }
-
-    .p-double-row__muted-row {
-      @extend %small-text;
-      @extend %p-double-row__row;
-      color: $color-mid-dark;
-      margin-bottom: map-get($line-heights, default-text) - map-get($line-heights, small) - map-get($nudges, nudge--small);
-    }
-  }
-
-  .p-checkbox--action {
-    &.actionable::before {
-      background-color: $color-positive;
-    }
-
-    &.not-actionable::before {
-      background-color: $color-caution;
-    }
-
-    &.actionable::after,
-    &.not-actionable::after {
-      color: $color-x-light;
-    }
-  }
-
-  .p-muted-text {
-    @extend %small-text;
+@import "tables/base_tables";
+@import "tables/breakpoint-widths";
+@import "tables/patterns_double-row";
+@import "tables/patterns_table-controllers";
+@import "tables/patterns_table-devices";
+@import "tables/patterns_table-dns";
+@import "tables/patterns_table-expanding";
+@import "tables/patters_table-fabrics";
+@import "tables/patterns_table-images";
+@import "tables/patterns_table-machines";
+@import "tables/patterns_table-network-discovery";
+@import "tables/patterns_table-network-summary";
+@import "tables/patterns_table-pods";
+@import "tables/patterns_table-pools";
+@import "tables/patterns_table-ssh-keys";
+@import "tables/patterns_table-sortable";
+@import "tables/patterns_table-static-routes";
+@import "tables/patterns_table-storage";
+@import "tables/patterns_table-testing";
+@import "tables/patterns_table-zones";
+@import "tables/patterns_table-dhcp-snippets";
+
+@include maas-b-tables;
+@include maas-double-row;
+@include maas-table-controllers;
+@include maas-table-dns;
+@include maas-table-devices;
+@include maas-table-expanding;
+@include maas-table-fabrics;
+@include maas-table-images;
+@include maas-table-machines;
+@include maas-table-network-discovery;
+@include maas-table-network-summary;
+@include maas-table-pods;
+@include maas-table-pools;
+@include maas-table-sortable;
+@include maas-table-ssh-keys;
+@include maas-table-static-routes;
+@include maas-table-storage;
+@include maas-table-testing;
+@include maas-table-zones;
+@include maas-table-dhcp-snippets;
+
+// Global MAAS table classes
+.p-muted-text {
+  @extend %small-text;
+  color: $color-mid-dark;
+  margin: 0;
+  padding: 0;
+}
+
+.p-link--muted {
+  &:visited {
     color: $color-mid-dark;
-    margin: 0;
-    padding: 0;
   }
 
-  .p-link--muted {
-    &:visited {
-      color: $color-mid-dark;
-    }
-
-    &:hover {
-      color: $color-link;
-    }
+  &:hover {
+    color: $color-link;
   }
+}
 
-  .p-domain-name {
-    display: inline-block;
+.p-table__row--muted {
+  background-color: $color-light;
+}
 
-    .p-domain-name__host {
-      font-weight: 400;
-    }
-
-    .p-domain-name__tld {
-      @extend %small-text;
-      margin-bottom: map-get($line-heights, default-text) - map-get($line-heights, small) - map-get($nudges, nudge--small);
-    }
+.u-hide--br1 {
+  @media (max-width: $breakpoint-first - 1px) {
+    display: none !important;
   }
+}
 
-  .p-power-menu {
-    @extend .p-contextual-menu;
-    margin-bottom: -$sp-unit;
-    width: 100%;
-
-    %power-menu-link {
-      @extend .p-contextual-menu__link;
-      padding: $spv-intra $sp-xx-large;
-      position: relative;
-      transition: 0s;
-
-      &::before {
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: map-get($icon-sizes, default);
-        content: '';
-        height: 17px;
-        left: $sph-intra;
-        position: absolute;
-        top: $spv-intra--expanded;
-        width: map-get($icon-sizes, default);
-      }
-    }
-
-    .p-power-menu__title {
-      border-bottom: 1px solid $color-light-new;
-      color: $color-mid-dark;
-      font-size: .75rem;
-      font-weight: 400;
-      padding: $spv-intra--condensed $sp-xx-large;
-      text-transform: uppercase;
-    }
-
-    .p-power-menu__footer {
-      border-top: 1px solid $color-light-new;
-      color: $color-mid-dark;
-      padding: $spv-intra--condensed $sp-xx-large;
-    }
-
-    .p-power-menu__toggle {
-      background-color: transparentize($color-x-light, 0.25);
-      cursor: pointer;
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 2px;
-    }
-
-    .p-power-menu__dropdown {
-      @extend .p-contextual-menu__dropdown;
-      left: -#{$sph-intra};
-      max-width: none;
-      min-width: 100%;
-      top: $sp-x-large;
-      width: -moz-max-content;
-      width: max-content;
-    }
-
-    .p-power-menu__check-power {
-      @extend %power-menu-link;
-    }
-
-    .p-power-menu__power-on {
-      @extend %power-menu-link;
-
-      &::before {
-        @include maas-icon-power-on($color-positive);
-      }
-    }
-
-    .p-power-menu__power-off {
-      @extend %power-menu-link;
-
-      &::before {
-        @include maas-icon-power-on($color-mid-light);
-      }
-    }
-
-    .p-double-row__icon-container {
-      cursor: pointer;
-    }
+.u-hide--br2 {
+  @media (max-width: $breakpoint-second - 1px) {
+    display: none !important;
   }
+}
 
-  .u-hide--br1 {
-    @media (max-width: $breakpoint-first - 1px) {
-      display: none !important;
-    }
+.u-hide--br3 {
+  @media (max-width: $breakpoint-third - 1px) {
+    display: none !important;
   }
+}
 
-  .u-hide--br2 {
-    @media (max-width: $breakpoint-second - 1px) {
-      display: none !important;
-    }
-  }
-
-  .u-hide--br3 {
-    @media (max-width: $breakpoint-third - 1px) {
-      display: none !important;
-    }
-  }
-
-  .u-hide--br4 {
-    @media (max-width: $breakpoint-fourth - 1px) {
-      display: none !important;
-    }
+.u-hide--br4 {
+  @media (max-width: $breakpoint-fourth - 1px) {
+    display: none !important;
   }
 }

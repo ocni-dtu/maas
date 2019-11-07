@@ -3,9 +3,7 @@
 
 """The PackageRepository handler for the WebSocket connection."""
 
-__all__ = [
-    "PackageRepositoryHandler",
-    ]
+__all__ = ["PackageRepositoryHandler"]
 
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
@@ -22,18 +20,11 @@ from maasserver.websockets.handlers.timestampedmodel import (
 
 
 class PackageRepositoryHandler(TimestampedModelHandler):
-
     class Meta:
         queryset = PackageRepository.objects.all()
-        pk = 'id'
-        allowed_methods = [
-            'list',
-            'get',
-            'create',
-            'update',
-            'delete',
-        ]
-        listen_channels = ['packagerepository']
+        pk = "id"
+        allowed_methods = ["list", "get", "create", "update", "delete"]
+        listen_channels = ["packagerepository"]
         form = PackageRepositoryForm
 
     def create(self, params):
@@ -57,12 +48,6 @@ class PackageRepositoryHandler(TimestampedModelHandler):
         else:
             raise HandlerValidationError(form.errors)
 
-        # Create by updating the fields on the object.
-        obj = self._meta.object_class()
-        obj = self.full_hydrate(obj, params)
-        obj.save()
-        return self.full_dehydrate(obj)
-
     def update(self, params):
         """Update the object from params iff admin."""
         if not self.user.is_superuser:
@@ -73,7 +58,8 @@ class PackageRepositoryHandler(TimestampedModelHandler):
         request.user = self.user
         # Update by using form.
         form = PackageRepositoryForm(
-            instance=obj, request=request, data=params)
+            instance=obj, request=request, data=params
+        )
         if form.is_valid():
             try:
                 obj = form.save(ENDPOINT.UI, request)
@@ -82,11 +68,6 @@ class PackageRepositoryHandler(TimestampedModelHandler):
             return self.full_dehydrate(obj)
         else:
             raise HandlerValidationError(form.errors)
-
-        # Update by updating the fields on the object.
-        obj = self.full_hydrate(obj, params)
-        obj.save()
-        return self.full_dehydrate(obj)
 
     def delete(self, params):
         """Delete the object from params iff admin."""

@@ -13,35 +13,24 @@ __all__ = [
     "print_response_content",
     "print_response_headers",
     "safe_name",
-    "sudo_gid",
-    "sudo_uid",
 ]
 
-from contextlib import contextmanager
 from email.message import Message
 from functools import partial
-from inspect import (
-    cleandoc,
-    getdoc,
-)
+from inspect import cleandoc, getdoc
 import io
-import os
-from os import (
-    setegid,
-    seteuid,
-)
 import re
 import sys
 from urllib.parse import urlparse
 
 
-re_paragraph_splitter = re.compile(
-    r"(?:\r\n){2,}|\r{2,}|\n{2,}", re.MULTILINE)
+re_paragraph_splitter = re.compile(r"(?:\r\n){2,}|\r{2,}|\n{2,}", re.MULTILINE)
 
 paragraph_split = re_paragraph_splitter.split
 docstring_split = partial(paragraph_split, maxsplit=1)
 remove_line_breaks = lambda string: (
-    " ".join(line.strip() for line in string.splitlines()))
+    " ".join(line.strip() for line in string.splitlines())
+)
 
 newline = "\n"
 empty = ""
@@ -71,8 +60,7 @@ def parse_docstring(thing):
     return title, body
 
 
-re_camelcase = re.compile(
-    r"([A-Z]*[a-z0-9]+|[A-Z]+)(?:(?=[^a-z0-9])|\Z)")
+re_camelcase = re.compile(r"([A-Z]*[a-z0-9]+|[A-Z]+)(?:(?=[^a-z0-9])|\Z)")
 
 
 def safe_name(string):
@@ -152,9 +140,7 @@ def get_response_content_type(response):
 def is_response_textual(response):
     """Is the response body text?"""
     content_type = get_response_content_type(response)
-    return (
-        content_type.endswith("/json") or
-        content_type.startswith("text/"))
+    return content_type.endswith("/json") or content_type.startswith("text/")
 
 
 def print_response_headers(headers, file=None):
@@ -166,10 +152,10 @@ def print_response_headers(headers, file=None):
     # Function to change headers like "transfer-encoding" into
     # "Transfer-Encoding".
     cap = lambda header: "-".join(
-        part.capitalize() for part in header.split("-"))
+        part.capitalize() for part in header.split("-")
+    )
     # Format string to prettify reporting of response headers.
-    form = "%%%ds: %%s" % (
-        max(len(header) for header in headers) + 2)
+    form = "%%%ds: %%s" % (max(len(header) for header in headers) + 2)
     # Print the response.
     for header in sorted(headers):
         print(form % (cap(header), headers[header]), file=file)
@@ -210,35 +196,3 @@ def dump_response_summary(response, file=None):
     print(file=file)
     print_response_headers(response, file=file)
     print(file=file)
-
-
-@contextmanager
-def sudo_uid():
-    """Context to revert effective UID to that of the user invoking `sudo`."""
-    try:
-        sudo_uid = os.environ["SUDO_UID"]
-    except KeyError:
-        yield  # Not running under sudo.
-    else:
-        orig_euid = os.geteuid()
-        seteuid(int(sudo_uid))
-        try:
-            yield
-        finally:
-            seteuid(orig_euid)
-
-
-@contextmanager
-def sudo_gid():
-    """Context to revert effective GID to that of the user invoking `sudo`."""
-    try:
-        sudo_gid = os.environ["SUDO_GID"]
-    except KeyError:
-        yield  # Not running under sudo.
-    else:
-        orig_egid = os.getegid()
-        setegid(int(sudo_gid))
-        try:
-            yield
-        finally:
-            setegid(orig_egid)

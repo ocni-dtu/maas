@@ -1,6 +1,6 @@
 <header class="p-strip--light is-shallow u-no-padding--bottom page-header" media-query="min-width: 769px">
     <div class="row">
-        <div class="tablet-col-4 col-8">
+        <div class="col-medium-4 col-8">
             <h1 class="page-header__title">DNS</h1>
             <p class="page-header__status" data-ng-show="loading">
                 <i class="p-icon--spinner u-animation--spin"></i> Loading...
@@ -9,14 +9,14 @@
                 <ng-pluralize data-ng-hide="loading" count="domains.length"
                     when="{'one': '{$ domains.length $} domain available', 'other': '{$ domains.length $} domains available '}"></ng-pluralize></p>
         </div>
-        <div class="tablet-col-2 col-4">
+        <div class="col-medium-2 col-4">
             <div class="page-header__controls" data-ng-show="isSuperUser()">
                 <button class="p-button--neutral"
                     data-ng-click="addDomain()"
-                    data-ng-hide="addDomainScope.viewable">Add domain</button>
+                    data-ng-if="!addDomainScope.viewable">Add domain</button>
                 <button class="p-button--neutral"
                     data-ng-click="cancelAddDomain()"
-                    data-ng-show="addDomainScope.viewable">Cancel add domain</button>
+                    data-ng-if="addDomainScope.viewable" disabled>Add domain</button>
             </div>
         </div>
     </div>
@@ -25,14 +25,14 @@
         <div class="row">
             <div class="col-6">
                 <form class="p-form p-form--inline row">
-                    <div class="p-form__group p-form-validation" data-ng-class="{ 'is-error': nameHasError() }">
+                    <div class="p-form__group p-form-validation col-3" data-ng-class="{ 'is-error': nameHasError() }">
                         <label for="domain-name" class="p-form__label">Name</label>
                         <div class="p-form__control">
                             <input type="text" id="domain-name" placeholder="Domain name"
                                 data-ng-model="domain.name" class="p-form-validation__input">
                         </div>
                     </div>
-                    <div class="p-form__group p-form-validation" data-ng-class="{ 'is-error': nameHasError() }">
+                    <div class="p-form__group p-form-validation col-3 u-no-margin--left" data-ng-class="{ 'is-error': nameHasError() }">
                         <input type="checkbox" class="checkbox" id="domain-authoritative" data-ng-model="domain.authoritative">
                         <label for="domain-authoritative" class="u-no-margin--top">Authoritative</label>
                     </div>
@@ -63,24 +63,28 @@
 </div>
 <div class="p-strip" data-ng-show="!loading">
     <section class="row">
-        <table class="p-table-expanding p-table--sortable u-no-margin--top" style="overflow: visible;">
+        <table class="p-table--dns p-table-expanding p-table--sortable u-no-margin--top" style="overflow: visible;">
             <thead>
-                <tr role="row">
-                    <th role="columnheader" class="col-3" data-ng-click="predicate='name'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'name', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Domain">Domain</th>
-                    <th role="columnheader" class="col-2 u-align--right" data-ng-click="predicate='authoritative'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'authoritative', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Authoritative">Authoritative</th>
-                    <th role="columnheader" class="col-2 u-align--right" data-ng-click="predicate='hosts'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'hosts', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Hosts">Hosts</th>
-                    <th role="columnheader" class="col-2 u-align--right" data-ng-click="predicate='resource_count'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'resource_count', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Total Records">Total Records</th>
-                    <th role="columnheader" class="col-3 u-align--right" title="Actions" data-ng-if="isSuperUser()"><span class="u-float--right">Actions</span></th>
+                <tr role="row" class="p-table__row">
+                    <th role="columnheader" data-ng-click="predicate='name'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'name', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Domain">Domain</th>
+                    <th role="columnheader" data-ng-click="predicate='authoritative'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'authoritative', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Authoritative">Authoritative</th>
+                    <th role="columnheader" class="u-align--right" data-ng-click="predicate='hosts'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'hosts', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Hosts">Hosts</th>
+                    <th role="columnheader" class="u-align--right" data-ng-click="predicate='resource_count'; reverse = !reverse" data-ng-class="{'is-sorted': predicate === 'resource_count', 'sort-asc': reverse === false, 'sort-desc': reverse === true}" title="Total Records">Total Records</th>
+                    <th role="columnheader" class="u-align--right" title="Actions" data-ng-if="isSuperUser()"><span class="u-float--right">Actions</span></th>
                 </tr>
             </thead>
             <tbody>
-                <tr role="row" data-ng-repeat="row in domains | orderBy:predicate:reverse track by row.id"
-                    data-ng-class="{ 'is-active': confirmSetDefaultRow === row }">
-                    <td class="col-3" aria-label="Domain"><a href="#/domain/{$ row.id $}" title="{$ row.displayname $}">{$ row.displayname $}</a></td>
-                    <td class="col-2 u-align--right" aria-label="Authoritative" title="{$ row.authoritative ? 'Yes' : 'No' $}">{$ row.authoritative ? "Yes" : "No" $}</td>
-                    <td class="col-2 u-align--right" aria-label="Hosts" title="{$ row.hosts $}">{$ row.hosts $}</td>
-                    <td class="col-2 u-align--right" aria-label="Total records" title="{$ row.resource_count $}">{$ row.resource_count $}</td>
-                    <td class="col-3 u-align--right p-table--action-cell" style="min-height: 43px;" aria-label="Actions" data-ng-if="isSuperUser()">
+                <tr
+                    role="row"
+                    class="p-table__row"
+                    data-ng-repeat="row in domains | orderBy:predicate:reverse track by row.id"
+                    data-ng-class="{ 'is-active': confirmSetDefaultRow === row }"
+                >
+                    <td aria-label="Domain"><a href="#/domain/{$ row.id $}" title="{$ row.displayname $}">{$ row.displayname $}</a></td>
+                    <td aria-label="Authoritative" title="{$ row.authoritative ? 'Yes' : 'No' $}">{$ row.authoritative ? "Yes" : "No" $}</td>
+                    <td class="u-align--right" aria-label="Hosts" title="{$ row.hosts $}">{$ row.hosts $}</td>
+                    <td class="u-align--right" aria-label="Total records" title="{$ row.resource_count $}">{$ row.resource_count $}</td>
+                    <td class="u-align--right p-table--action-cell" style="min-height: 43px;" aria-label="Actions" data-ng-if="isSuperUser()">
                         <div class="p-contextual-menu" data-ng-class="{ 'u-hide': row.is_default === true || confirmSetDefaultRow === row }" toggle-ctrl>
                             <button class="p-button--base is-small p-contextual-menu__toggle" data-ng-click="toggleMenu()">
                                 <i class="p-icon--contextual-menu u-no-margin--right">Actions</i></button>

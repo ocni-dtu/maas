@@ -9,43 +9,72 @@
  * accordion tab.
  */
 
+function maasCodeLines() {
+  return {
+    restrict: "A",
+    scope: {
+      maasCodeLines: "&"
+    },
+    link: function(scope, element) {
+      function insertContent() {
+        // Empty the element contents and include again, this assures
+        // its the most up-to-date content
+        element.empty();
+        element.text(scope.maasCodeLines);
 
- angular.module('MAAS').directive('maasCodeLines', function () {
-     return {
-         restrict: "A",
-         scope: {
-             maasCodeLines: '&'
-         },
-         link: function(scope, element, attributes) {
+        const lines = element.html().split("\n");
+        let insert = "";
+        let newLine = "";
 
-             function insertContent() {
+        // Add copy button
+        insert +=
+          "<button " +
+          'class="p-code-numbered__copy-button p-button has-icon" ' +
+          '><i class="p-icon--copy">Copy</i></button>';
 
-                 // Empty the element contents and include again, this asures
-                 // its the most up-to-date content
-                 element.empty();
-                 element.text(scope.maasCodeLines);
+        // Each line is to be wrapped by a span which is style & given
+        // its appropriate line number
+        insert += "<code>";
+        lines.forEach(
+          line =>
+            (insert +=
+              newLine +
+              '<span class="p-code-numbered__line">' +
+              line +
+              "</span>")
+        );
+        insert += "</code>";
 
-                 // Count the line contents
-                 var lines = element.html().split('\n'),
-                     newLine = '',
-                     insert = "<code>";
+        // Re-insert the contents
+        element.html(insert);
+      }
 
-                 // Each line is to be wrapped by a span which is style & given
-                 // its appropriate line number
-                 $.each(lines, function() {
-                   insert += newLine + '<span class="code-line">' +
-                   this + '</span>';
-                   newLine = '\n';
-                 });
-                 insert += "</code>";
+      scope.copyToClipboard = () => {
+        const el = document.createElement("textarea");
+        el.value = scope.maasCodeLines();
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      };
 
-                 // Re-insert the contents
-                 element.html(insert);
-             }
+      // Watch the contents of the element so when it changes to
+      // re-add the line numbers.
+      scope.$watch(scope.maasCodeLines, () => {
+        insertContent();
+        element
+          .find(".p-code-numbered__copy-button")
+          .bind("click", scope.copyToClipboard);
+      });
 
-             // Watch the contents of the element so when it changes to
-             // re-add the line numbers.
-             scope.$watch(scope.maasCodeLines, insertContent);
-         }
-     };
- });
+      // Remove the handlers when the scope is destroyed.
+      scope.$on("$destroy", () => {
+        element
+          .find(".p-code-numbered__copy-button")
+          .off("click", scope.copyToClipboard);
+      });
+    }
+  };
+}
+
+export default maasCodeLines;

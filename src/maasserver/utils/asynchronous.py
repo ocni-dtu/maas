@@ -3,10 +3,7 @@
 
 """Utilities for working with asynchronous operations."""
 
-__all__ = [
-    'DeferredHooks',
-    "gather",
-]
+__all__ = ["DeferredHooks", "gather"]
 
 from collections import deque
 from contextlib import contextmanager
@@ -24,11 +21,7 @@ from provisioningserver.utils.twisted import (
     synchronous,
 )
 from twisted.internet import reactor
-from twisted.internet.defer import (
-    CancelledError,
-    Deferred,
-    maybeDeferred,
-)
+from twisted.internet.defer import CancelledError, Deferred, maybeDeferred
 
 
 log = LegacyLogger()
@@ -51,7 +44,8 @@ class UseOnceIterator:
     def __next__(self):
         if self.has_run_once:
             raise IteratorReusedError(
-                "It is not possible to reuse a UseOnceIterator.")
+                "It is not possible to reuse a UseOnceIterator."
+            )
         try:
             return next(self.iterable)
         except StopIteration:
@@ -121,7 +115,7 @@ def gatherCallResults(calls, timeout=10.0):
         for deferred in deferreds:
             try:
                 deferred.cancel()
-            except:
+            except Exception:
                 log.err(None, "Failure gathering results.")
 
     if timeout is None:
@@ -193,7 +187,7 @@ class DeferredHooks(threading.local):
         self.hooks = deque()
         try:
             yield
-        except:
+        except Exception:
             self.reset()
             raise
         else:
@@ -245,7 +239,7 @@ class DeferredHooks(threading.local):
         hook.addErrback(log.err, "Failure when cancelling hook.")
         try:
             hook.cancel()
-        except:
+        except Exception:
             # The canceller has failed. We take a hint from DeferredList here,
             # by logging the exception and moving on.
             log.err(None, "Failure when cancelling hook.")

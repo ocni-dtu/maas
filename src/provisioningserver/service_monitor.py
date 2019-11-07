@@ -3,8 +3,7 @@
 
 """Services monitored on rackd."""
 
-__all__ = [
-    ]
+__all__ = []
 
 from provisioningserver.utils.service_monitor import (
     AlwaysOnService,
@@ -49,6 +48,9 @@ class DNSServiceOnRack(ToggleableService):
     name = "dns_rack"
     service_name = "bind9"
     snap_service_name = "bind9"
+
+    # Pass SIGKILL directly to parent.
+    kill_extra_opts = ("-s", "SIGKILL")
 
 
 class ProxyServiceOnRack(ToggleableService):

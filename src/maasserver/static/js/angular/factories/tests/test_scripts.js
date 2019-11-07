@@ -4,21 +4,18 @@
  * Unit tests for ScriptsManager.
  */
 
-
 describe("ScriptsManager", function() {
+  // Load the MAAS module.
+  beforeEach(angular.mock.module("MAAS"));
 
-    // Load the MAAS module.
-    beforeEach(module("MAAS"));
+  // Load the ScriptsManager.
+  var ScriptsManager;
+  beforeEach(inject(function($injector) {
+    ScriptsManager = $injector.get("ScriptsManager");
+  }));
 
-    // Load the ScriptsManager.
-    var ScriptsManager, RegionConnection;
-    beforeEach(inject(function($injector) {
-        ScriptsManager = $injector.get("ScriptsManager");
-        RegionConnection = $injector.get("RegionConnection");
-    }));
-
-    it("set requires attributes", function() {
-        expect(ScriptsManager._pk).toBe("id");
-        expect(ScriptsManager._handler).toBe("script");
-    });
+  it("set requires attributes", function() {
+    expect(ScriptsManager._pk).toBe("id");
+    expect(ScriptsManager._handler).toBe("script");
+  });
 });

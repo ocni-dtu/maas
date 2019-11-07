@@ -1,5 +1,6 @@
 {
   "read-node": {
+    "bios_boot_method": "pxe",
     "boot_interface": {
       "system_id": "g8xyqs",
       "name": "eth-jJ5ZwN",
@@ -38,6 +39,9 @@
       "links": [],
       "effective_mtu": 1500,
       "product": null,
+      "link_connected": true,
+      "interface_speed": 1000,
+      "link_speed": 1000,
       "resource_uri": "/MAAS/api/2.0/nodes/g8xyqs/interfaces/112/"
     },
     "memory": 8192,
@@ -224,6 +228,9 @@
         "links": [],
         "effective_mtu": 1500,
         "product": null,
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/g8xyqs/interfaces/112/"
       },
       {
@@ -264,6 +271,9 @@
         "links": [],
         "effective_mtu": 1500,
         "product": null,
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/g8xyqs/interfaces/113/"
       },
       {
@@ -304,6 +314,9 @@
         "links": [],
         "effective_mtu": 1500,
         "product": null,
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/g8xyqs/interfaces/114/"
       },
       {
@@ -346,12 +359,16 @@
         "links": [],
         "effective_mtu": 1500,
         "product": null,
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/g8xyqs/interfaces/115/"
       }
     ],
     "owner_data": {},
     "bcaches": [],
     "hostname": "causal-quagga",
+    "description": "Optional description for the node.",
     "raids": [],
     "other_test_status": 2,
     "status_action": "action-BqENyW",
@@ -439,6 +456,8 @@
     "other_test_status_name": "Passed",
     "virtualblockdevice_set": [],
     "cpu_speed": 0,
+    "interface_test_status_name": "Unknown",
+    "interface_test_status": -1,
     "resource_uri": "/MAAS/api/2.0/machines/g8xyqs/"
   },
   "details": {
@@ -463,6 +482,7 @@
       "storage_test_status": -1,
       "cpu_count": 4,
       "hostname": "mymaas",
+      "description": "Optional description for the node.",
       "domain": {
         "authoritative": true,
         "ttl": null,
@@ -628,6 +648,9 @@
               }
             }
           ],
+          "link_connected": true,
+          "interface_speed": 1000,
+          "link_speed": 1000,
           "resource_uri": "/MAAS/api/2.0/nodes/6gsym8/interfaces/1/"
         },
         {
@@ -697,6 +720,9 @@
               }
             }
           ],
+          "link_connected": true,
+          "interface_speed": 1000,
+          "link_speed": 1000,
           "resource_uri": "/MAAS/api/2.0/nodes/6gsym8/interfaces/17/"
         }
       ],
@@ -729,6 +755,8 @@
       "storage_test_status_name": "Unknown",
       "architecture": "amd64/generic",
       "cpu_test_status_name": "Unknown",
+      "interface_test_status_name": "Unknown",
+      "interface_test_status": -1,
       "resource_uri": "/MAAS/api/2.0/rackcontrollers/6gsym8/"
     }
   ],
@@ -737,6 +765,7 @@
       "somekey": "somevalue"
     },
     "cpu_speed": 0,
+    "bios_boot_method": "pxe",
     "boot_interface": {
       "system_id": "q46awd",
       "effective_mtu": 1500,
@@ -809,6 +838,9 @@
         }
       ],
       "discovered": null,
+      "link_connected": true,
+      "interface_speed": 1000,
+      "link_speed": 1000,
       "resource_uri": "/MAAS/api/2.0/nodes/q46awd/interfaces/100/"
     },
     "swap_size": null,
@@ -940,6 +972,9 @@
           }
         ],
         "discovered": null,
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/q46awd/interfaces/100/"
       },
       {
@@ -1014,6 +1049,9 @@
           }
         ],
         "discovered": null,
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/q46awd/interfaces/101/"
       },
       {
@@ -1089,6 +1127,9 @@
           }
         ],
         "discovered": null,
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/q46awd/interfaces/102/"
       }
     ],
@@ -1423,9 +1464,12 @@
     "fqdn": "clever-thrush.maas",
     "power_state": "unknown",
     "hostname": "clever-thrush",
+    "description": "Optional description for the node.",
     "ip_addresses": [
       "172.16.1.252"
     ],
+    "interface_test_status_name": "Unknown",
+    "interface_test_status": -1,
     "resource_uri": "/MAAS/api/2.0/machines/q46awd/"
   },
   "query-power-state": {
@@ -1435,6 +1479,7 @@
     "cpu_count": 1,
     "fqdn": "node2.maas",
     "hostname": "node2",
+    "description": "Optional description for the node.",
     "power_state": "on",
     "cpu_test_status": -1,
     "storage": 8000,
@@ -1442,6 +1487,7 @@
     "cpu_test_status_name": "Unknown",
     "testing_status": 2,
     "iscsiblockdevice_set": [],
+    "bios_boot_method": "pxe",
     "boot_interface": {
       "vlan": {
         "vid": 0,
@@ -1509,6 +1555,9 @@
       "tags": [],
       "type": "physical",
       "params": "",
+      "link_connected": true,
+      "interface_speed": 1000,
+      "link_speed": 1000,
       "resource_uri": "/MAAS/api/2.0/nodes/e8xa8m/interfaces/5/"
     },
     "boot_disk": {
@@ -1730,6 +1779,9 @@
         "tags": [],
         "type": "physical",
         "params": "",
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/e8xa8m/interfaces/5/"
       }
     ],
@@ -1816,12 +1868,15 @@
     "status_name": "Deployed",
     "storage_test_status_name": "Passed",
     "owner": "admin",
+    "interface_test_status_name": "Unknown",
+    "interface_test_status": -1,
     "resource_uri": "/MAAS/api/2.0/machines/e8xa8m/"
   },
   "power-off": {
     "cpu_count": 1,
     "fqdn": "node2.maas",
     "hostname": "node2",
+    "description": "Optional description for the node.",
     "power_state": "on",
     "cpu_test_status": -1,
     "storage": 8000,
@@ -1829,6 +1884,7 @@
     "cpu_test_status_name": "Unknown",
     "testing_status": 2,
     "iscsiblockdevice_set": [],
+    "bios_boot_method": "pxe",
     "boot_interface": {
       "vlan": {
         "vid": 0,
@@ -1896,6 +1952,9 @@
       "tags": [],
       "type": "physical",
       "params": "",
+      "link_connected": true,
+      "interface_speed": 1000,
+      "link_speed": 1000,
       "resource_uri": "/MAAS/api/2.0/nodes/e8xa8m/interfaces/5/"
     },
     "boot_disk": {
@@ -2117,6 +2176,9 @@
         "tags": [],
         "type": "physical",
         "params": "",
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/e8xa8m/interfaces/5/"
       }
     ],
@@ -2203,6 +2265,8 @@
     "status_name": "Deployed",
     "storage_test_status_name": "Passed",
     "owner": "admin",
+    "interface_test_status_name": "Unknown",
+    "interface_test_status": -1,
     "resource_uri": "/MAAS/api/2.0/machines/e8xa8m/"
   },
   "test": {
@@ -2218,6 +2282,7 @@
     "netboot": false,
     "power_type": "virsh",
     "hostname": "node2",
+    "description": "Optional description for the node.",
     "node_type": 0,
     "testing_status": 0,
     "default_gateways": {
@@ -2292,6 +2357,7 @@
         "resource_uri": "/MAAS/api/2.0/nodes/e8xa8m/blockdevices/2/"
       }
     ],
+    "bios_boot_method": "pxe",
     "boot_interface": {
       "firmware_version": null,
       "vlan": {
@@ -2359,6 +2425,9 @@
       "system_id": "e8xa8m",
       "enabled": true,
       "name": "ens4",
+      "link_connected": true,
+      "interface_speed": 1000,
+      "link_speed": 1000,
       "resource_uri": "/MAAS/api/2.0/nodes/e8xa8m/interfaces/5/"
     },
     "pod": {
@@ -2586,10 +2655,15 @@
         "system_id": "e8xa8m",
         "enabled": true,
         "name": "ens4",
+        "link_connected": true,
+        "interface_speed": 1000,
+        "link_speed": 1000,
         "resource_uri": "/MAAS/api/2.0/nodes/e8xa8m/interfaces/5/"
       }
     ],
     "commissioning_status_name": "Passed",
+    "interface_test_status_name": "Unknown",
+    "interface_test_status": -1,
     "resource_uri": "/MAAS/api/2.0/machines/e8xa8m/"
   },
   "get-power-params": {
@@ -2939,7 +3013,8 @@
           "estimated_runtime": "1:03:28",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": false
         },
         {
           "id": 344,
@@ -2957,7 +3032,8 @@
           "estimated_runtime": "0:44:30",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": false
         },
         {
           "id": 343,
@@ -2975,16 +3051,17 @@
           "estimated_runtime": "1:55:49",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": false
         },
         {
           "id": 345,
           "created": "Thu, 06 Dec 2018 20:41:55 -0000",
           "updated": "Thu, 06 Dec 2018 20:41:56 -0000",
           "name": "00-maas-02-virtuality",
-          "status": 2,
-          "status_name": "Passed",
-          "exit_status": 0,
+          "status": 3,
+          "status_name": "Failed",
+          "exit_status": 1,
           "started": "Tue, 09 May 2017 14:02:19 -0000",
           "ended": "Tue, 09 May 2017 15:08:21 -0000",
           "runtime": "1:06:02",
@@ -2993,16 +3070,17 @@
           "estimated_runtime": "1:06:02",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": true
         },
         {
           "id": 346,
           "created": "Thu, 06 Dec 2018 20:41:55 -0000",
           "updated": "Thu, 06 Dec 2018 20:41:56 -0000",
           "name": "00-maas-03-install-lldpd",
-          "status": 2,
-          "status_name": "Passed",
-          "exit_status": 0,
+          "status": 3,
+          "status_name": "Failed",
+          "exit_status": 1,
           "started": "Tue, 07 Nov 2017 15:05:05 -0000",
           "ended": "Tue, 07 Nov 2017 15:59:57 -0000",
           "runtime": "0:54:52",
@@ -3011,7 +3089,8 @@
           "estimated_runtime": "0:54:52",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": true
         },
         {
           "id": 347,
@@ -3029,7 +3108,8 @@
           "estimated_runtime": "2:20:19",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": false
         },
         {
           "id": 348,
@@ -3047,16 +3127,17 @@
           "estimated_runtime": "0:01:06",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": false
         },
         {
           "id": 349,
           "created": "Thu, 06 Dec 2018 20:41:55 -0000",
           "updated": "Thu, 06 Dec 2018 20:41:56 -0000",
           "name": "00-maas-06-get-fruid-api-data",
-          "status": 2,
-          "status_name": "Passed",
-          "exit_status": 0,
+          "status": 3,
+          "status_name": "Failed",
+          "exit_status": 1,
           "started": "Wed, 04 Jan 2017 19:25:11 -0000",
           "ended": "Wed, 04 Jan 2017 19:33:04 -0000",
           "runtime": "0:07:53",
@@ -3065,7 +3146,8 @@
           "estimated_runtime": "0:07:53",
           "parameters": {},
           "script_id": null,
-          "script_revision_id": null
+          "script_revision_id": null,
+          "suppressed": true
         },
         {
           "id": 350,
@@ -4800,6 +4882,7 @@
     "children": [],
     "mac_address": "00:11:22:33:44:55",
     "params": {
+      "bridge_type": "standard",
       "bridge_fd": 15,
       "bridge_stp": false
     },
@@ -5579,5 +5662,182 @@
   },
   "raids-placeholder": {
     "message": "Information about this object is not available at this time."
+  },
+  "vmfs-datastores-read": [
+    {
+      "id": 22,
+      "system_id": "8f86dk",
+      "devices": [
+        {
+          "uuid": "b376683f-27b6-4ee9-b51a-ec1b1bf3493d",
+          "size": 45248151552,
+          "bootable": false,
+          "tags": [],
+          "id": 75,
+          "system_id": "8f86dk",
+          "type": "partition",
+          "device_id": 24,
+          "filesystem": {
+            "fstype": "vmfs6",
+            "label": null,
+            "uuid": "0894f25f-9514-488f-b5c8-e7eb4e8a7b88",
+            "mount_point": null,
+            "mount_options": null
+          },
+          "used_for": "VMFS extent for datastore1",
+          "path": "/dev/disk/by-dname/sda-part9",
+          "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/blockdevices/24/partition/75"
+        }
+      ],
+      "name": "datastore1",
+      "size": 45248151552,
+      "human_size": "45.2 GB",
+      "uuid": "930a9453-e419-44e2-a7b9-b4541d94eb98",
+      "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/vmfs-datastore/22/"
+    },
+    {
+      "id": 23,
+      "system_id": "8f86dk",
+      "devices": [
+        {
+          "uuid": "1a456f4d-f204-459e-bba5-2e35f4ee6007",
+          "size": 21466447872,
+          "bootable": false,
+          "tags": [],
+          "id": 79,
+          "system_id": "8f86dk",
+          "type": "partition",
+          "device_id": 25,
+          "filesystem": {
+            "fstype": "vmfs6",
+            "label": null,
+            "uuid": "69afdece-307a-4cd2-bd85-fbbfccddaa20",
+            "mount_point": null,
+            "mount_options": null
+          },
+          "used_for": "VMFS extent for datastore2",
+          "path": "/dev/disk/by-dname/sdb-part2",
+          "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/blockdevices/25/partition/79"
+        }
+      ],
+      "name": "datastore2",
+      "size": 21466447872,
+      "human_size": "21.5 GB",
+      "uuid": "c6c28390-f341-4a7d-97d7-19e5b816a07b",
+      "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/vmfs-datastore/23/"
+    }
+  ],
+  "vmfs-datastores-create": {
+    "devices": [
+      {
+        "uuid": "b376683f-27b6-4ee9-b51a-ec1b1bf3493d",
+        "size": 45248151552,
+        "bootable": false,
+        "tags": [],
+        "type": "partition",
+        "path": "/dev/disk/by-dname/sda-part9",
+        "device_id": 24,
+        "filesystem": {
+          "fstype": "vmfs6",
+          "label": null,
+          "uuid": "3016ad2d-cb05-4640-bb2e-b6d3e0e244b0",
+          "mount_point": null,
+          "mount_options": null
+        },
+        "used_for": "VMFS extent for datastore1",
+        "id": 75,
+        "system_id": "8f86dk",
+        "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/blockdevices/24/partition/75"
+      },
+      {
+        "uuid": "58259c3c-5bd1-4cab-8c5e-31a5fa10c314",
+        "size": 21466447872,
+        "bootable": false,
+        "tags": [],
+        "type": "partition",
+        "path": "/dev/disk/by-dname/sdb-part2",
+        "device_id": 25,
+        "filesystem": {
+          "fstype": "vmfs6",
+          "label": null,
+          "uuid": "7ce3af06-b734-4a30-a65a-81e8d8ff948e",
+          "mount_point": null,
+          "mount_options": null
+        },
+        "used_for": "VMFS extent for datastore1",
+        "id": 80,
+        "system_id": "8f86dk",
+        "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/blockdevices/25/partition/80"
+      }
+    ],
+    "size": 66714599424,
+    "uuid": "da2b83e5-8922-47f6-9498-0da5cd25e6ca",
+    "name": "datastore1",
+    "human_size": "66.7 GB",
+    "id": 24,
+    "system_id": "8f86dk",
+    "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/vmfs-datastore/24/"
+  },
+  "vmfs-datastore-read": {
+    "name": "datastore1",
+    "system_id": "8f86dk",
+    "uuid": "7fb744d3-ff7b-4235-8a2b-aeecf96ad3d0",
+    "devices": [
+      {
+        "uuid": "b376683f-27b6-4ee9-b51a-ec1b1bf3493d",
+        "size": 45248151552,
+        "bootable": false,
+        "tags": [],
+        "used_for": "VMFS extent for datastore1",
+        "device_id": 24,
+        "path": "/dev/disk/by-dname/sda-part9",
+        "system_id": "8f86dk",
+        "type": "partition",
+        "filesystem": {
+          "fstype": "vmfs6",
+          "label": null,
+          "uuid": "ad5a77ad-27bb-4144-9c38-29a51a8f966c",
+          "mount_point": null,
+          "mount_options": null
+        },
+        "id": 75,
+        "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/blockdevices/24/partition/75"
+      }
+    ],
+    "human_size": "45.2 GB",
+    "id": 25,
+    "size": 45248151552,
+    "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/vmfs-datastore/25/"
+  },
+  "vmfs-datastore-update": {
+    "name": "datastore1",
+    "system_id": "8f86dk",
+    "uuid": "7fb744d3-ff7b-4235-8a2b-aeecf96ad3d0",
+    "devices": [
+      {
+        "uuid": "b376683f-27b6-4ee9-b51a-ec1b1bf3493d",
+        "size": 45248151552,
+        "bootable": false,
+        "tags": [],
+        "used_for": "VMFS extent for datastore1",
+        "device_id": 24,
+        "path": "/dev/disk/by-dname/sda-part9",
+        "system_id": "8f86dk",
+        "type": "partition",
+        "filesystem": {
+          "fstype": "vmfs6",
+          "label": null,
+          "uuid": "ad5a77ad-27bb-4144-9c38-29a51a8f966c",
+          "mount_point": null,
+          "mount_options": null
+        },
+        "id": 75,
+        "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/blockdevices/24/partition/75"
+      }
+    ],
+    "human_size": "45.2 GB",
+    "id": 25,
+    "size": 45248151552,
+    "resource_uri": "/MAAS/api/2.0/nodes/8f86dk/vmfs-datastore/25/"
   }
 }

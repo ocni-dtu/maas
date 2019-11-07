@@ -1,6 +1,6 @@
 <header class="p-strip--light is-shallow u-no-padding--bottom page-header" media-query="min-width: 769px">
     <div class="row">
-        <div class="tablet-col-4 col-8">
+        <div class="col-medium-4 col-8">
             <h1 class="page-header__title">
                 {$ domain.name $}
             </h1>
@@ -15,7 +15,7 @@
                             when="{'0': 'No resource records', 'one': ' {$ domain.resource_count $} resource record', 'other': ' {$ domain.resource_count $} resource records'}"></ng-pluralize>
             </p>
         </div>
-        <div class="tablet-col-2 col-4">
+        <div class="col-medium-2 col-4">
             <div class="page-header__controls ng-hide" data-ng-show="isSuperUser() && !loading">
                 <button class="p-button--negative"
                     data-ng-click="deleteButton()"
@@ -84,21 +84,21 @@
                     <div class="col-6">
                         <maas-obj-field
                             subtle="false" type="text" key="name" label="Name" placeholder="Name"
-                            label-width="two" input-width="three"></maas-obj-field>
+                            label-width="2" input-width="4"></maas-obj-field>
                         <maas-obj-field
                             subtle="false" type="options" key="rrtype" label="Type"
                             options="type as type for type in supportedRecordTypes"
-                            label-width="two" input-width="three"></maas-obj-field>
+                            label-width="2" input-width="4"></maas-obj-field>
                     </div>
                     <div class="col-6">
                         <maas-obj-field
                             subtle="false" type="text" key="rrdata" label="Data"
                             placeholder="Data"
-                            label-width="two" input-width="three"></maas-obj-field>
+                            label-width="2" input-width="4"></maas-obj-field>
                         <maas-obj-field
                             subtle="false" type="text" key="ttl" label="TTL"
                             placeholder="TTL in seconds (optional)"
-                            label-width="two" input-width="three"></maas-obj-field>
+                            label-width="2" input-width="4"></maas-obj-field>
                         <maas-obj-field type="hidden" key="domain" value="{$ domain.id $}" />
                     </div>
                 </div>
@@ -119,45 +119,45 @@
 </header>
 <section class="p-strip" data-ng-show="!loading">
     <div class="row">
-        <div class="col-12">
-            <div class="col-8">
-                <h2 class="p-heading--four">Domain summary</h2>
-            </div>
-            <div class="col-4">
-                <div class="u-align--right" data-ng-show="isSuperUser()">
-                    <button type="button" name="button" class="p-button--neutral" data-ng-click="enterEditSummary()" data-ng-if="editSummary != true">Edit</button>
-                </div>
+        <div class="col-8">
+            <h2 class="p-heading--four">Domain summary</h2>
+        </div>
+        <div class="col-4">
+            <div class="u-align--right" data-ng-show="isSuperUser()">
+                <button type="button" name="button" class="p-button--neutral" data-ng-click="enterEditSummary()" data-ng-if="editSummary != true">Edit</button>
             </div>
         </div>
     </div>
     <div class="form p-form--stacked row" data-ng-if="editSummary != true">
         <div class="col-6">
-            <div class="p-form__group">
-                <div class="p-form__label is-disabled">
+            <div class="p-form__group row">
+                <div class="col-2 p-form__label is-disabled">
                     <p>Name</p>
                 </div>
-                <div class="p-form__control">
+                <div class="col-4">
                     <p>{$ domain.name $}</p>
                 </div>
             </div>
-            <div class="p-form__group">
-                <div class="p-form__label is-disabled">
+            <div class="p-form__group row">
+                <div class="col-2 p-form__label is-disabled">
                     <p>TTL</p>
                 </div>
-                <div class="p-form__control">
+                <div class="col-4">
                     <p data-ng-if="domain.ttl">{$ domain.ttl $}</p>
                     <p data-ng-if="!domain.ttl">(default)</p>
                 </div>
             </div>
         </div>
         <div class="col-6">
-            <div class="p-form__group">
-                <div class="p-form__label is-disabled">
+            <div class="p-form__group row">
+                <div class="col-2 p-form__label is-disabled">
                     <p>Authoritative</p>
                 </div>
-                <div class="p-form__control">
-                    <span data-ng-if="domain.authoritative == false">No</span>
-                    <span data-ng-if="domain.authoritative == true">Yes</span>
+                <div class="col-4">
+                    <p>
+                        <span data-ng-if="domain.authoritative == false">No</span>
+                        <span data-ng-if="domain.authoritative == true">Yes</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -176,7 +176,7 @@
                 </div>
                 <div class="col-6">
                     <maas-obj-field type="onoffswitch" key="authoritative" label="Authoritative"
-                                    label-width="3" input-width="3"></maas-obj-field>
+                                    label-width="2" input-width="4"></maas-obj-field>
                 </div>
             </div>
             <div class="row">
@@ -199,14 +199,14 @@
         <h2 class="col-12 p-heading--four">Resource records</h2>
     </div>
     <div class="row">
-        <table class="p-table-expanding p-table--sortable u-no-margin--top" style="overflow: visible;">
-            <thead data-ng-if="windowWidth >= 769" offset="88" media-query="min-width: 768px">
-                <tr>
-                    <th class="col-3" role="columnheader" data-ng-click="sortTable('name')" data-ng-class="{'is-sorted': predicate === 'name', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">Name</th>
-                    <th class="col-2" role="columnheader" data-ng-click="sortTable('rrtype')" data-ng-class="{'is-sorted': predicate === 'rrtype', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">Type</th>
-                    <th class="col-2" role="columnheader" data-ng-click="sortTable('ttl')" data-ng-class="{'is-sorted': predicate === 'ttl', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">TTL</th>
-                    <th class="col-3" role="columnheader" data-ng-click="sortTable('rrdata')" data-ng-class="{'is-sorted': predicate === 'rrdata', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">Data</th>
-                    <th class="col-1" role="columnheader">
+        <table class="p-table--resource-records p-table-expanding p-table--sortable u-no-margin--top" style="overflow: visible;">
+            <thead data-ng-if="windowWidth >= 769" offset="88" media-query="min-width: 772px">
+                <tr class="p-table__row">
+                    <th role="columnheader" data-ng-click="sortTable('name')" data-ng-class="{'is-sorted': predicate === 'name', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">Name</th>
+                    <th role="columnheader" data-ng-click="sortTable('rrtype')" data-ng-class="{'is-sorted': predicate === 'rrtype', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">Type</th>
+                    <th role="columnheader" data-ng-click="sortTable('ttl')" data-ng-class="{'is-sorted': predicate === 'ttl', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">TTL</th>
+                    <th role="columnheader" data-ng-click="sortTable('rrdata')" data-ng-class="{'is-sorted': predicate === 'rrdata', 'sort-asc': reverse === false, 'sort-desc': reverse === true}">Data</th>
+                    <th role="columnheader">
                         <div class="u-align--right">
                             Actions
                         </div>
@@ -214,9 +214,12 @@
                 </tr>
             </thead>
         <tbody>
-            <tr data-ng-repeat="row in domain.rrsets | orderBy:predicate:reverse track by $index"
-                data-ng-class="{ 'is-active': editRow === row || deleteRow === row }">
-                <td class="col-3" aria-label="Name" data-ng-if="editRow !== row">
+            <tr
+                class="p-table__row"
+                data-ng-repeat="row in domain.rrsets | orderBy:predicate:reverse track by $index"
+                data-ng-class="{ 'is-active': editRow === row || deleteRow === row }"
+            >
+                <td aria-label="Name" data-ng-if="editRow !== row">
                     <span data-ng-if="row.system_id == null">{$ row.name $}</span>
                     <span data-ng-if="row.system_id !== null">
                         <div data-ng-switch="row.node_type">
@@ -232,11 +235,11 @@
                         </div>
                     </span>
                 </td>
-                <td class="col-2" aria-label="Type" data-ng-if="editRow !== row">{$ row.rrtype $}</td>
-                <td class="col-2" aria-label="TTL" data-ng-if="editRow !== row && row.ttl">{$ row.ttl $}</td>
-                <td class="col-2" aria-label="TTL" data-ng-if="editRow !== row && !row.ttl">(default)</td>
-                <td class="col-3" aria-label="Data" data-ng-if="editRow !== row">{$ row.rrdata $}</td>
-                <td class="col-1 p-table--action-cell" data-ng-if="editRow !== row">
+                <td aria-label="Type" data-ng-if="editRow !== row">{$ row.rrtype $}</td>
+                <td aria-label="TTL" data-ng-if="editRow !== row && row.ttl">{$ row.ttl $}</td>
+                <td aria-label="TTL" data-ng-if="editRow !== row && !row.ttl">(default)</td>
+                <td aria-label="Data" data-ng-if="editRow !== row">{$ row.rrdata $}</td>
+                <td class="p-table--action-cell" data-ng-if="editRow !== row">
                     <div class="u-align--right">
                         <div class="p-contextual-menu" toggle-ctrl data-ng-if="!isRecordAutogenerated(row)" data-ng-show="isSuperUser()">
                             <button class="p-contextual-menu__toggle p-button--base is-small" data-ng-click="toggleMenu()">

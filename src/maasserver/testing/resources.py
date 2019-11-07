@@ -3,9 +3,7 @@
 
 """Resources for testing the MAAS region application."""
 
-__all__ = [
-    "DjangoDatabasesManager",
-]
+__all__ = ["DjangoDatabasesManager"]
 
 from itertools import count
 import os
@@ -13,17 +11,10 @@ from pathlib import Path
 import re
 from sys import __stderr__
 
-from maasserver.testing import tablecounts
-from maastesting.matchers import GreaterThanOrEqual
 from postgresfixture import ClusterFixture
 import psycopg2
 from psycopg2.errorcodes import DUPLICATE_DATABASE
 from testresources import TestResourceManager
-from testtools.matchers import (
-    Equals,
-    GreaterThan,
-    MatchesDict,
-)
 
 
 here = Path(__file__).parent
@@ -32,9 +23,13 @@ here = Path(__file__).parent
 # Set `MAAS_DEBUG_RESOURCES` to anything in the calling environment to
 # activate some debugging help for the code in this module.
 if os.environ.get("MAAS_DEBUG_RESOURCES") is None:
+
     def debug(message, **args):
         """Throw away all messages."""
+
+
 else:
+
     def debug(message, **args):
         """Write a debug message to stderr, delimiting for visibility."""
         args = {
@@ -42,8 +37,8 @@ else:
             for name, value in args.items()
         }
         print(
-            "<< " + message.format(**args) + " >>",
-            file=__stderr__, flush=True)
+            "<< " + message.format(**args) + " >>", file=__stderr__, flush=True
+        )
 
 
 class DatabaseClusterManager(TestResourceManager):
@@ -73,9 +68,7 @@ class DjangoDatabases(list):
 class DjangoPristineDatabaseManager(TestResourceManager):
     """Resource manager for pristine Django databases."""
 
-    resources = (
-        ("cluster", DatabaseClusterManager()),
-    )
+    resources = (("cluster", DatabaseClusterManager()),)
 
     setUpCost = 25
     tearDownCost = 1
@@ -88,6 +81,7 @@ class DjangoPristineDatabaseManager(TestResourceManager):
     def _make(self, cluster):
         # Ensure that Django is initialised.
         import django
+
         django.setup()
 
         # Import other modules without risk of toy throwing from Django.
@@ -98,8 +92,10 @@ class DjangoPristineDatabaseManager(TestResourceManager):
 
         # For each database, create a ${name}_test database.
         databases = DjangoDatabases(
-            database for database in settings.DATABASES.values()
-            if database["HOST"] == cluster.datadir)
+            database
+            for database in settings.DATABASES.values()
+            if database["HOST"] == cluster.datadir
+        )
 
         created = set()
         with cluster.connect() as conn:
@@ -116,7 +112,9 @@ class DjangoPristineDatabaseManager(TestResourceManager):
                         created.add(dbname)
                         debug(
                             "Created {dbname}; statement: {stmt}",
-                            dbname=dbname, stmt=stmt)
+                            dbname=dbname,
+                            stmt=stmt,
+                        )
                     database["NAME"] = dbname
 
         # Attempt to populate these databases from a dumped database script.
@@ -127,9 +125,17 @@ class DjangoPristineDatabaseManager(TestResourceManager):
                 initial = here.joinpath("initial.%s.sql" % dbname)
                 if initial.is_file():
                     cluster.execute(
-                        "psql", "--quiet", "--single-transaction",
-                        "--set=ON_ERROR_STOP=1", "--dbname", dbname,
-                        "--output", os.devnull, "--file", str(initial))
+                        "psql",
+                        "--quiet",
+                        "--single-transaction",
+                        "--set=ON_ERROR_STOP=1",
+                        "--dbname",
+                        dbname,
+                        "--output",
+                        os.devnull,
+                        "--file",
+                        str(initial),
+                    )
 
         # First, drop any views that may already exist. We don't want views
         # that that depend on a particular schema to prevent schema changes
@@ -162,58 +168,28 @@ class DjangoPristineDatabaseManager(TestResourceManager):
 
 def close_all_connections():
     from django.db import connections
+
     for conn in connections.all():
         conn.close()
 
 
-# These are the expected row counts for tables in MAAS; those not mentioned
-# are assumed to have zero rows.
-expected_table_counts = {
-    'auth_permission': GreaterThan(0),
-    'auth_user': GreaterThanOrEqual(0),
-    'django_content_type': GreaterThan(0),
-    'django_migrations': GreaterThan(0),
-    # Mystery Django stuff here. No idea what django_site does; it seems to
-    # only ever contain a single row referring to "example.com".
-    'django_site': Equals(1),
-    # Tests do not use migrations, but were they to do so the following
-    # maasserver_* tables would have one row or more each.
-    'maasserver_dnspublication': Equals(1),
-    'maasserver_domain': Equals(1),
-    'maasserver_fabric': Equals(1),
-    'maasserver_packagerepository': Equals(2),
-    'maasserver_vlan': Equals(1),
-    'maasserver_zone': Equals(1),
-}
-
-
-def are_table_row_counts_expected():
-    """Check if all tables have expected row counts.
-
-    This considers only tables in the database's public schema, which, for
-    MAAS, means only application tables.
-    """
-    observed = tablecounts.get_table_row_counts()
-    expected = dict.fromkeys(observed, Equals(0))
-    expected.update(expected_table_counts)
-    mismatch = MatchesDict(expected).match(observed)
-    if mismatch is None:
-        return True
-    else:
-        debug("Table count mismatch: {desc}", desc=mismatch.describe)
-        return False
-
-
 class DjangoDatabasesManager(TestResourceManager):
-    """Resource manager for a Django database used for a test."""
+    """Resource manager for a Django database used for a test.
 
-    resources = (
-        ("templates", DjangoPristineDatabaseManager()),
-    )
+    Since it's hard to determine whether a database has been modified,
+    this manager assumes that it has and mark it as dirty by default.
 
-    def __init__(self):
+    Tests that know that the database hasn't been modified can either
+    pass in the assume_dirty=False when creating the manager, or set the
+    dirty attribute.
+    """
+
+    resources = (("templates", DjangoPristineDatabaseManager()),)
+
+    def __init__(self, assume_dirty=True):
         super(DjangoDatabasesManager, self).__init__()
         self._count = count(1)
+        self.dirty = assume_dirty
 
     def make(self, dependencies):
         databases = dependencies["templates"]
@@ -223,10 +199,14 @@ class DjangoDatabasesManager(TestResourceManager):
                 for database in databases:
                     template = database["NAME"]
                     dbname = "%s_%d_%d" % (
-                        template, os.getpid(), next(self._count))
-                    stmt = (
-                        "CREATE DATABASE %s WITH TEMPLATE %s"
-                        % (dbname, template))
+                        template,
+                        os.getpid(),
+                        next(self._count),
+                    )
+                    stmt = "CREATE DATABASE %s WITH TEMPLATE %s" % (
+                        dbname,
+                        template,
+                    )
                     # Create the database with a shared lock to the cluster to
                     # avoid racing a DjangoPristineDatabaseManager.make in a
                     # concurrently running test process.
@@ -234,7 +214,9 @@ class DjangoDatabasesManager(TestResourceManager):
                         cursor.execute(stmt)
                     debug(
                         "Created {dbname}; statement: {stmt}",
-                        dbname=dbname, stmt=stmt)
+                        dbname=dbname,
+                        stmt=stmt,
+                    )
                     database["NAME"] = dbname
         return databases
 
@@ -254,32 +236,22 @@ class DjangoDatabasesManager(TestResourceManager):
         """Terminate other connections to the given database."""
         cursor.execute(
             "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-            "WHERE pid != pg_backend_pid() AND datname = %s", [dbname])
-        count = sum(
-            (1 if success else 0)
-            for [success] in cursor.fetchall())
+            "WHERE pid != pg_backend_pid() AND datname = %s",
+            [dbname],
+        )
+        count = sum((1 if success else 0) for [success] in cursor.fetchall())
         debug(
             "Killed {count} other backends in {dbname}",
-            count=count, dbname=dbname)
+            count=count,
+            dbname=dbname,
+        )
 
     @staticmethod
     def _dropDatabase(cursor, dbname):
         """Drop the given database."""
         stmt = "DROP DATABASE %s" % dbname
         cursor.execute(stmt)
-        debug(
-            "Dropped {dbname}; statement: {stmt}",
-            dbname=dbname, stmt=stmt)
+        debug("Dropped {dbname}; statement: {stmt}", dbname=dbname, stmt=stmt)
 
     def isDirty(self):
-        from django.db import connections
-        in_transaction = any(
-            connection.in_atomic_block
-            for connection in connections.all())
-        if in_transaction:
-            debug("Database is CLEAN (in transaction)")
-            return False
-        else:
-            clean = are_table_row_counts_expected()
-            debug("Database is {state}", state="CLEAN" if clean else "DIRTY")
-            return not clean
+        return self.dirty

@@ -4,9 +4,7 @@
 
 """Test loader for the Django parts of MAAS."""
 
-__all__ = [
-    "MAASDjangoTestRunner",
-]
+__all__ = ["MAASDjangoTestRunner"]
 
 from django.conf import settings
 from django_nose import NoseTestSuiteRunner
@@ -30,7 +28,7 @@ class MAASDjangoTestRunner(NoseTestSuiteRunner):
             # Call-up to super-classes.
             up = super(MAASDjangoTestRunner, self)
             return up.setup_databases(*args, **kwargs)
-        except:
+        except Exception:
             # Clean-up the cluster now, or it'll be left running; django-nose
             # does not know to clean it up itself, and lacks a fixture-like
             # mechanism to aid with reverting a half-configured environment.

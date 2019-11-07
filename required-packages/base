@@ -6,6 +6,9 @@ devscripts
 distro-info
 dnsutils
 freeipmi-tools
+golang-go
+go-dep
+iputils-ping
 isc-dhcp-common
 isc-dhcp-server
 libjs-angularjs
@@ -34,6 +37,7 @@ python3-httplib2
 python3-jsonschema
 python3-lxml
 python3-macaroonbakery
+python3-markupsafe
 python3-novaclient
 python3-netaddr
 python3-netifaces
@@ -56,6 +60,7 @@ python3-twisted
 python3-txtftp
 python3-tz
 python3-uvloop
+python3-venv
 python3-yaml
 python3-zope.interface
 syslinux-common

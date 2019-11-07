@@ -1,11 +1,9 @@
-# Copyright 2017-2018 Canonical Ltd.  This software is licensed under the
+# Copyright 2017-2019 Canonical Ltd.  This software is licensed under the
 # GNU Affero General Public License version 3 (see the file LICENSE).
 
 """The NodeResult handler for the WebSocket connection."""
 
-__all__ = [
-    "NodeResultHandler",
-    ]
+__all__ = ["NodeResultHandler"]
 
 from operator import attrgetter
 
@@ -24,40 +22,37 @@ from metadataserver.models import ScriptResult
 
 
 class NodeResultHandler(TimestampedModelHandler):
-
     class Meta:
-        queryset = ScriptResult.objects.all().defer(
-            'output', 'stdout', 'stderr').prefetch_related(
-            'script', 'script_set').defer(
-                'script__parameters', 'script__packages').defer(
-                    'script_set__requested_scripts')
-        pk = 'id'
+        queryset = (
+            ScriptResult.objects.all()
+            .defer("output", "stdout", "stderr")
+            .prefetch_related("script", "script_set")
+            .defer("script__parameters", "script__packages")
+            .defer("script_set__requested_scripts")
+        )
+        pk = "id"
         allowed_methods = [
-            'clear',
-            'get',
-            'get_result_data',
-            'get_history',
-            'list',
+            "clear",
+            "get",
+            "get_result_data",
+            "get_history",
+            "list",
         ]
-        listen_channels = ['scriptresult']
-        exclude = [
-            "script_set",
-            "script_name",
-            "output",
-            "stdout",
-            "stderr",
-        ]
+        listen_channels = ["scriptresult"]
+        exclude = ["script_set", "script_name", "output", "stdout", "stderr"]
         list_fields = [
             "id",
             "updated",
             "script",
             "parameters",
             "physical_blockdevice",
+            "interface",
             "script_version",
             "status",
             "exit_status",
             "started",
             "ended",
+            "suppressed",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -85,6 +80,7 @@ class NodeResultHandler(TimestampedModelHandler):
         data["endtime"] = obj.endtime
         data["estimated_runtime"] = obj.estimated_runtime
         data["result_type"] = obj.script_set.result_type
+        data["suppressed"] = obj.suppressed
         if obj.script is not None:
             data["hardware_type"] = obj.script.hardware_type
             data["tags"] = ", ".join(obj.script.tags)
@@ -92,26 +88,30 @@ class NodeResultHandler(TimestampedModelHandler):
             # Only builtin commissioning scripts don't have an associated
             # Script object.
             data["hardware_type"] = HARDWARE_TYPE.NODE
-            data["tags"] = 'commissioning'
+            data["tags"] = "commissioning"
         try:
             results = obj.read_results()
         except ValidationError as e:
-            data["results"] = [{
-                "name": "error",
-                "title": "Error",
-                "description": "An error has occured while processing.",
-                "value": str(e),
-                "surfaced": True,
-            }]
+            data["results"] = [
+                {
+                    "name": "error",
+                    "title": "Error",
+                    "description": "An error has occured while processing.",
+                    "value": str(e),
+                    "surfaced": True,
+                }
+            ]
         else:
             data["results"] = []
             for key, value in results.get("results", {}).items():
                 if obj.script is not None:
                     if isinstance(obj.script.results, dict):
                         title = obj.script.results.get(key, {}).get(
-                            "title", key)
+                            "title", key
+                        )
                         description = obj.script.results.get(key, {}).get(
-                            "description", "")
+                            "description", ""
+                        )
                     # Only show surfaced results for builtin scripts. Result
                     # data from the user script is only shown in on the storage
                     # or test tabs.
@@ -121,15 +121,17 @@ class NodeResultHandler(TimestampedModelHandler):
                     # associated Script object. If MAAS ever includes result
                     # data in the builtin commissioning scripts show it.
                     title = key
-                    description = ''
+                    description = ""
                     surfaced = True
-                data["results"].append({
-                    "name": key,
-                    "title": title,
-                    "description": description,
-                    "value": value,
-                    "surfaced": surfaced,
-                })
+                data["results"].append(
+                    {
+                        "name": key,
+                        "title": title,
+                        "description": description,
+                        "value": value,
+                        "surfaced": surfaced,
+                    }
+                )
         return data
 
     def get_node(self, params):
@@ -157,49 +159,56 @@ class NodeResultHandler(TimestampedModelHandler):
         :param hardware_type: Only return results with this hardware type.
         :param physical_blockdevice_id: Only return the results associated
            with the blockdevice_id.
+        :param interface_id: Only return the results assoicated with the
+           interface_id.
         :param has_surfaced: Only return results if they have surfaced.
         """
         node = self.get_node(params)
         queryset = node.get_latest_script_results
-        queryset = queryset.defer('output', 'stdout', 'stderr')
-        queryset = queryset.defer('script__parameters', 'script__packages')
-        queryset = queryset.defer('script_set__requested_scripts')
+        queryset = queryset.defer("output", "stdout", "stderr")
+        queryset = queryset.defer("script__parameters", "script__packages")
+        queryset = queryset.defer("script_set__requested_scripts")
 
         if "result_type" in params:
             queryset = queryset.filter(
-                script_set__result_type=params["result_type"])
+                script_set__result_type=params["result_type"]
+            )
         if "hardware_type" in params:
             queryset = queryset.filter(
-                script__hardware_type=params["hardware_type"])
+                script__hardware_type=params["hardware_type"]
+            )
         if "physical_blockdevice_id" in params:
-            queryset = queryset.filter(physical_blockdevice_id=params[
-                "physical_blockdevice_id"])
+            queryset = queryset.filter(
+                physical_blockdevice_id=params["physical_blockdevice_id"]
+            )
+        if "interface_id" in params:
+            queryset = queryset.filter(interface_id=params["interface_id"])
         if "has_surfaced" in params:
             if params["has_surfaced"]:
-                queryset = queryset.exclude(result='')
+                queryset = queryset.exclude(result="")
         if "start" in params:
-            queryset = queryset[params["start"]:]
+            queryset = queryset[params["start"] :]
         if "limit" in params:
-            queryset = queryset[:params["limit"]]
+            queryset = queryset[: params["limit"]]
 
         objs = list(queryset)
         getpk = attrgetter(self._meta.pk)
         self.cache["loaded_pks"].update(getpk(obj) for obj in objs)
-        return [
-            self.full_dehydrate(obj, for_list=True)
-            for obj in objs
-        ]
+        return [self.full_dehydrate(obj, for_list=True) for obj in objs]
 
     def get_result_data(self, params):
         """Return the raw script result data."""
-        id = params.get('id')
-        data_type = params.get('data_type', 'combined')
-        if data_type not in {'combined', 'stdout', 'stderr', 'result'}:
+        id = params.get("id")
+        data_type = params.get("data_type", "combined")
+        if data_type not in {"combined", "stdout", "stderr", "result"}:
             return "Unknown data_type %s" % data_type
-        if data_type == 'combined':
-            data_type = 'output'
-        script_result = ScriptResult.objects.filter(
-            id=id).only(data_type).first()
+        if data_type == "combined":
+            data_type = "output"
+        script_result = (
+            ScriptResult.objects.filter(id=id)
+            .only("status", data_type)
+            .first()
+        )
         if script_result is None:
             return "Unknown ScriptResult id %s" % id
         data = getattr(script_result, data_type)
@@ -207,23 +216,46 @@ class NodeResultHandler(TimestampedModelHandler):
 
     def get_history(self, params):
         """Return a list of historic results."""
-        id = params.get('id')
-        script_result = ScriptResult.objects.filter(id=id).only(
-            'script_id', 'script_set_id', 'physical_blockdevice_id',
-            'script_name').first()
+        id = params.get("id")
+        script_result = (
+            ScriptResult.objects.filter(id=id)
+            .only(
+                "status",
+                "script_id",
+                "script_set_id",
+                "physical_blockdevice_id",
+                "interface_id",
+                "script_name",
+            )
+            .first()
+        )
         history_qs = script_result.history.only(
-            'id', 'updated', 'status', 'started', 'ended', 'script_id',
-            'script_name', 'script_set_id', 'physical_blockdevice_id')
-        return [{
-            'id': history.id,
-            'updated': dehydrate_datetime(history.updated),
-            'status': history.status,
-            'status_name': history.status_name,
-            'runtime': history.runtime,
-            'starttime': history.starttime,
-            'endtime': history.endtime,
-            'estimated_runtime': history.estimated_runtime,
-        } for history in history_qs]
+            "id",
+            "updated",
+            "status",
+            "started",
+            "ended",
+            "script_id",
+            "script_name",
+            "script_set_id",
+            "physical_blockdevice_id",
+            "interface_id",
+            "suppressed",
+        )
+        return [
+            {
+                "id": history.id,
+                "updated": dehydrate_datetime(history.updated),
+                "status": history.status,
+                "status_name": history.status_name,
+                "runtime": history.runtime,
+                "starttime": history.starttime,
+                "endtime": history.endtime,
+                "estimated_runtime": history.estimated_runtime,
+                "suppressed": history.suppressed,
+            }
+            for history in history_qs
+        ]
 
     def clear(self, params):
         """Clears the current node for events.
@@ -251,4 +283,4 @@ class NodeResultHandler(TimestampedModelHandler):
             self._meta.handler_name,
             action,
             self.full_dehydrate(obj, for_list=True),
-            )
+        )

@@ -62,14 +62,12 @@ you can disable the daemon by inserting ``exit 1`` at the top of
 ``/etc/default/bind9``. The package still needs to be installed for
 tests though.
 
-Python development dependencies are pulled automatically from
-`PyPI`_ when ``buildout`` runs. (``buildout`` will be automatically
-configured to create a cache, in order to improve build times.
-See ``utilities/configure-buildout``.)
+Python development dependencies are pulled automatically from `PyPI`_ in a
+virtualenv located under ``.ve``.
 
-Javascript development dependencies are pulled automatically from
-`npm`_ when ``make`` runs. (``npm`` will be automatically
-configured to use a cache, in order to improve build times.)
+Javascript development dependencies are pulled automatically from `npm`_ when
+``make`` runs. (``npm`` will be automatically configured to use a cache, in
+order to improve build times.)
 
 .. _PyPI:
   http://pypi.python.org/
@@ -169,28 +167,52 @@ results to a different file descriptor, to ensure a clean stream.
 Running JavaScript tests
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The JavaScript tests are run using Karma_. Chromium and PhantomJS are the
-default browser but any browser supported by Karma can be used to run the
-tests.::
+The JavaScript tests are run using Jest_.::
 
-    $ ./bin/test.js
+    $ make test-js
 
-If you want to run the JavaScript tests in debug mode so you can inspect the
-code inside of a running browser you can launch Karma_ manually.::
+Jest tests can be run on change with:::
 
-    $ ./bin/karma start src/maastesting/karma.conf.js --browsers Chrome --no-single-run
+    $ make test-js-watch
 
-.. _Karma: http://karma-runner.github.io/
+.. _Jest: https://jestjs.io/
 
+
+Frontend development
+====================
+
+For faster development, Webpack watch mode can be run with::
+
+    $ make watch-assets
 
 JavaScript debugging
 ^^^^^^^^^^^^^^^^^^^^
 
-Angularjs debugInfo, which provides hooks for browser debugging tools like Batarang,
-is disabled by default. To re-enable debugInfo, run ``angular.reloadWithDebugInfo();``
-in the browser console.
+Angularjs debugInfo, which provides hooks for browser debugging tools
+like Batarang, is disabled by default. To re-enable debugInfo,
+run ``angular.reloadWithDebugInfo();`` in the browser console.
 
 See https://docs.angularjs.org/guide/production#disabling-debug-data for details.
+
+
+JavaScript linting and formatting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+JSLint can be run with::
+
+    $ make lint-js
+
+This will also run `prettier-check` which will notify you
+if there are formatting issues.
+
+Prettier can be run in write mode to correct formatting with::
+
+    $ make format
+
+ESLint is also available (the intention is to eventually replace JSLint),
+and can be run with::
+
+    $ ./bin/yarn lint
 
 
 Production MAAS server debugging
@@ -289,15 +311,18 @@ build/dev-snap and creates the snap directory in build/dev-snap/prime.
 
 You can now install the snap:
 
-    $ sudo snap try --devmode build/dev-snap/prime
+    $ sudo snap try build/dev-snap/prime
 
 Note that 'snap try' is used instead of 'snap install'. The maas snap
 should now be installed:
 
     $ snap list
-    Name  Version                          Rev   Developer  Notes
-    core  16-2.27.5                        2774  canonical  core
-    maas  2.3.0~alpha3-6225-gaa05ba6-snap  x1               devmode,try
+    Name          Version                 Rev   Tracking  Publisher   Notes
+    core          16-2.41                 7713  stable    canonical✓  core
+    core18        20191001                1192  stable    canonical✓  base
+    maas          2.7.0-8077-g.7e249fbe4  x1    -         -           try
+    maas-cli      0.6.5                   13    stable    canonical✓  -
+    snapd         2.41                    4605  stable    canonical✓  snapd
 
 Next you need to initialize the snap, just like you would normally do:
 
@@ -525,23 +550,6 @@ up, but with regiond in the foreground::
 Apparently Django needs a lot of debugging ;)
 
 
-Adding new dependencies
-=======================
-
-Since MAAS is distributed mainly as an Ubuntu package, all runtime
-dependencies should be packaged, and we should develop with the
-packaged version if possible. All dependencies, from a package or not,
-need to be added to ``setup.py`` and ``buildout.cfg``, and the version
-specified in ``versions.cfg`` (``allowed-picked-version`` is disabled,
-hence ``buildout`` must be given precise version information).
-
-If it is a development-only dependency (i.e. only needed for the test suite, or
-for developers' convenience), simply running ``buildout`` like this will make
-the necessary updates to ``versions.cfg``::
-
-    $ ./bin/buildout -v buildout:allow-picked-versions=true
-
-
 Adding new source files
 =======================
 
@@ -614,35 +622,6 @@ Once the operations have been added, apply that migration with::
     $ make syncdb
 
 
-Migrations before MAAS 2.0
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Previous version before MAAS 2.0 used South_ to perform database migrations. To
-support upgrading from any previous version of MAAS before 2.0 the South_
-migrations are run. On upgrade of MAAS those migrations will be
-run before the new Django_ migrations are run. On a fresh installation of MAAS
-the South_ migrations will be skipped because the Django_ migrations already
-provide the entire schema in the initial migration. All of this logic is
-performed on upgrade by the `dbupgrade` command.::
-
-    $ bin/maas-region dbupgrade
-
-In some testing case you might need to always run the South_ migrations before
-the Django_ migrations on a clean database. Using the `always-south` option on
-the `dbupgrade` command allows this testing scenario.::
-
-    $ bin/maas-region dbupgrade --always-south
-
-.. Note::
-
-   When the South_ migrations run they are actually being ran under Django 1.6
-   and South that is provided in the MAAS source code in a tarball. Located
-   at ``src/maasserver/migrations/south/django16_south.tar.gz`` this file is
-   extracted into a temporary folder and imported by MAAS to run the South
-   migrations.
-
-.. _South: http://south.aeracode.org/
-
 Examining the database manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -674,12 +653,12 @@ Viewing SQL queries during tests
 If you need to view the SQL queries that are performed during a test, the
 `LogSQL` fixture can be used to output all the queries during the test.::
 
-    from maasserver.fixture import LogSQL
+    from maasserver.testing.fixtures import LogSQL
     self.useFixture(LogSQL())
 
 Sometimes you need to see where in the code that query was performed.::
 
-    from maasserver.fixture import LogSQL
+    from maasserver.testing.fixtures import LogSQL
     self.useFixture(LogSQL(include_stacktrace=True))
 
 

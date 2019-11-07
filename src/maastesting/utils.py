@@ -47,7 +47,7 @@ def extract_word_list(string):
     Words are any string of 1 or more characters, not including commas,
     semi-colons, or whitespace.
     """
-    return re.findall("[^,;\s]+", string)
+    return re.findall(r"[^,;\s]+", string)
 
 
 # Some horrible binary data that could never, ever, under any encoding
@@ -60,4 +60,4 @@ def extract_word_list(string):
 #
 # (1) Provided, of course, that man know only about ASCII and
 # UTF.
-sample_binary_data = codecs.BOM64_LE + codecs.BOM64_BE + b'\x00\xff\x00'
+sample_binary_data = codecs.BOM64_LE + codecs.BOM64_BE + b"\x00\xff\x00"

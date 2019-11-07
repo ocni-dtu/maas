@@ -4,61 +4,44 @@
 """Utilities related to the Twisted/Crochet execution environment."""
 
 __all__ = [
-    'asynchronous',
-    'call',
-    'callInReactor',
-    'callInReactorWithTimeout',
-    'callOut',
-    'callOutToThread',
-    'deferred',
-    'DeferredValue',
-    'deferToNewThread',
-    'deferWithTimeout',
-    'FOREVER',
-    'IAsynchronous',
-    'ISynchronous',
-    'LONGTIME',
-    'makeDeferredWithProcessProtocol',
-    'pause',
-    'reducedWebLogFormatter',
-    'retries',
-    'suppress',
-    'synchronous',
-    'ThreadPool',
-    'ThreadPoolLimiter',
-    'ThreadUnpool',
-    ]
+    "asynchronous",
+    "call",
+    "callInReactor",
+    "callInReactorWithTimeout",
+    "callOut",
+    "callOutToThread",
+    "deferred",
+    "DeferredValue",
+    "deferToNewThread",
+    "deferWithTimeout",
+    "FOREVER",
+    "IAsynchronous",
+    "ISynchronous",
+    "LONGTIME",
+    "makeDeferredWithProcessProtocol",
+    "pause",
+    "reducedWebLogFormatter",
+    "retries",
+    "suppress",
+    "synchronous",
+    "ThreadPool",
+    "ThreadPoolLimiter",
+    "ThreadUnpool",
+]
 
-from collections import (
-    defaultdict,
-    Iterable,
-)
-from functools import (
-    partial,
-    wraps,
-)
+from collections import defaultdict, Iterable
+from functools import partial, wraps
 from http import HTTPStatus
-from itertools import (
-    chain,
-    repeat,
-    starmap,
-)
+from itertools import chain, repeat, starmap
 from operator import attrgetter
 import os
-from os import (
-    kill as _os_kill,
-    killpg as _os_killpg,
-)
+from os import kill as _os_kill, killpg as _os_killpg
 import signal
 import threading
 
 from crochet import run_in_reactor
-from netaddr import (
-    AddrFormatError,
-    IPAddress,
-)
+from netaddr import AddrFormatError, IPAddress
 from provisioningserver.logger import LegacyLogger
-from provisioningserver.prometheus.metrics import PROMETHEUS_METRICS
 from twisted.internet.defer import (
     AlreadyCalledError,
     CancelledError,
@@ -71,11 +54,7 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.internet.threads import deferToThread
 from twisted.internet.utils import _EverythingGetter
 from twisted.logger import Logger
-from twisted.python import (
-    context,
-    threadable,
-    threadpool,
-)
+from twisted.python import context, threadable, threadpool
 from twisted.python.failure import Failure
 from twisted.python.threadable import isInIOThread
 from twisted.web.iweb import IAccessLogFormatter
@@ -98,9 +77,11 @@ def deferred(func):
     This also serves a secondary documentation purpose; functions decorated
     with this are readily identifiable as asynchronous.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         return maybeDeferred(func, *args, **kwargs)
+
     return wrapper
 
 
@@ -146,13 +127,11 @@ def asynchronous(func=undefined, *, timeout=undefined):
     if timeout is not undefined:
         if isinstance(timeout, (int, float)):
             if timeout < 0:
-                raise ValueError(
-                    "timeout must be >= 0, not %d"
-                    % timeout)
+                raise ValueError("timeout must be >= 0, not %d" % timeout)
         elif timeout is not FOREVER:
             raise ValueError(
-                "timeout must an int, float, or undefined, not %r"
-                % (timeout,))
+                "timeout must an int, float, or undefined, not %r" % (timeout,)
+            )
 
     func_in_reactor = run_in_reactor(func)
 
@@ -227,19 +206,22 @@ def synchronous(func):
         # started but has now stopped, so don't test isInIOThread() until
         # we've also checked if the reactor is running.
         from twisted.internet import reactor
+
         if reactor.running and isInIOThread():
             raise AssertionError(
                 "Function %s(...) must not be called in the "
-                "reactor thread." % func.__name__)
+                "reactor thread." % func.__name__
+            )
         else:
             result = func(*args, **kwargs)
             if isinstance(result, Deferred):
                 args_reprs = chain(
-                    map(repr, args), starmap(
-                        "{}={!r}".format, kwargs.items()))
+                    map(repr, args), starmap("{}={!r}".format, kwargs.items())
+                )
                 raise TypeError(
                     "Synchronous call returned a Deferred: %s(%s)"
-                    % (func_name, ", ".join(args_reprs)))
+                    % (func_name, ", ".join(args_reprs))
+                )
             else:
                 return result
 
@@ -357,6 +339,7 @@ def deferWithTimeout(timeout, func=None, *args, **kwargs):
         d = maybeDeferred(func, *args, **kwargs)
 
     from twisted.internet import reactor
+
     timeoutCall = reactor.callLater(timeout, d.cancel)
 
     def done(result):
@@ -516,7 +499,8 @@ class DeferredValue:
         """
         if self.waiters is None:
             raise AlreadyCalledError(
-                "Value already set to %r." % (self.value,))
+                "Value already set to %r." % (self.value,)
+            )
 
         self.value = value
         waiters, self.waiters = self.waiters, None
@@ -553,13 +537,16 @@ class DeferredValue:
         """
         if self.waiters is None:
             raise AlreadyCalledError(
-                "Value already set to %r." % (self.value,))
+                "Value already set to %r." % (self.value,)
+            )
         if self.capturing is not None:
             raise AlreadyCalledError(
-                "Already capturing %r." % (self.capturing,))
+                "Already capturing %r." % (self.capturing,)
+            )
         if self.observing is not None:
             raise AlreadyCalledError(
-                "Already observing %r." % (self.observing,))
+                "Already observing %r." % (self.observing,)
+            )
 
         self.capturing = d
         return d.addCallbacks(self.set, self.fail)
@@ -577,13 +564,16 @@ class DeferredValue:
         """
         if self.waiters is None:
             raise AlreadyCalledError(
-                "Value already set to %r." % (self.value,))
+                "Value already set to %r." % (self.value,)
+            )
         if self.capturing is not None:
             raise AlreadyCalledError(
-                "Already capturing %r." % (self.capturing,))
+                "Already capturing %r." % (self.capturing,)
+            )
         if self.observing is not None:
             raise AlreadyCalledError(
-                "Already observing %r." % (self.observing,))
+                "Already observing %r." % (self.observing,)
+            )
 
         def set_and_return(value):
             self.set(value)
@@ -643,11 +633,6 @@ class DeferredValue:
         self.observing = None
 
 
-def _get_call_latency_metric_labels(fetcher, client, *args, **kwargs):
-    """Return labels for the rack/region call latency metric."""
-    return {'call': args[0].__name__}
-
-
 class RPCFetcher:
     """Coalesces concurrent RPC requests.
 
@@ -671,9 +656,6 @@ class RPCFetcher:
         super(RPCFetcher, self).__init__()
         self.pending = defaultdict(dict)
 
-    @PROMETHEUS_METRICS.record_call_latency(
-        'maas_rack_region_rpc_call_latency',
-        get_labels=_get_call_latency_metric_labels)
     def __call__(self, client, *args, **kwargs):
         """Call the command on the client."""
         command = (tuple(args), tuple(sorted(kwargs.items())))
@@ -711,8 +693,10 @@ def deferToNewThread(func, *args, **kwargs):
     d = Deferred()
     ctx = context.theContextTracker.currentContext().contexts[-1]
     thread = threading.Thread(
-        target=callInThread, args=(ctx, func, args, kwargs, d),
-        name="deferToNewThread(%s)" % getattr(func, "__name__", "..."))
+        target=callInThread,
+        args=(ctx, func, args, kwargs, d),
+        name="deferToNewThread(%s)" % getattr(func, "__name__", "..."),
+    )
     thread.start()
     return d
 
@@ -733,9 +717,10 @@ def callInThread(ctx, func, args, kwargs, d):
 
     """
     from twisted.internet import reactor
+
     try:
         result = context.call(ctx, func, *args, **kwargs)
-    except:
+    except Exception:
         # Failure() captures the exception information and trackback.
         reactor.callFromThread(context.call, ctx, d.errback, Failure())
     else:
@@ -808,6 +793,7 @@ class ThreadUnpool:
         def callInThreadWithLock(lock):
             dthread = deferToNewThread(ctxfunc, *args, **kwargs)
             return dthread.addBoth(callOut, lock.release)
+
         d.addCallback(callInThreadWithLock)
 
         if onResult is None:
@@ -842,11 +828,12 @@ class ThreadPool(threadpool.ThreadPool, object):
     log = Logger()
 
     def __init__(
-            self, minthreads=5, maxthreads=20, name=None,
-            contextFactory=None):
+        self, minthreads=5, maxthreads=20, name=None, contextFactory=None
+    ):
         super(ThreadPool, self).__init__(minthreads, maxthreads, name)
         self.context = ThreadWorkerContext(
-            NullContext if contextFactory is None else contextFactory)
+            NullContext if contextFactory is None else contextFactory
+        )
 
     def threadFactory(self, target, name):
         """Spawn a thread for use as a worker.
@@ -854,6 +841,7 @@ class ThreadPool(threadpool.ThreadPool, object):
         :param target: A no-argument callable; the worker function.
         :param name: The name of the thread.
         """
+
         def worker(log, context, target):
             ct = self.currentThread()
             try:
@@ -867,7 +855,7 @@ class ThreadPool(threadpool.ThreadPool, object):
                         # that happens. This thread is not going to execute
                         # any more tasks so we exit the context.
                         context.exit()
-                    except:
+                    except Exception:
                         # There is no application code for this exception to
                         # bubble up to, so just log it and move on.
                         log.failure("Failure exiting worker context.")
@@ -878,7 +866,8 @@ class ThreadPool(threadpool.ThreadPool, object):
                     self.threads.remove(ct)
 
         return super(ThreadPool, self).threadFactory(
-            name=name, target=worker, args=(self.log, self.context, target))
+            name=name, target=worker, args=(self.log, self.context, target)
+        )
 
     def callInThreadWithCallback(self, onResult, func, *args, **kwargs):
         """See :class:`twisted.python.threadpool.ThreadPool`.
@@ -889,12 +878,14 @@ class ThreadPool(threadpool.ThreadPool, object):
         application code, rather than being logged (and ignored) and breaking
         the pool (which assumes that creating a thread will always succeed).
         """
+
         def callInContext(context, func, *args, **kwargs):
             context.enter()  # Delayed until now.
             return func(*args, **kwargs)
 
         return super(ThreadPool, self).callInThreadWithCallback(
-            onResult, callInContext, self.context, func, *args, **kwargs)
+            onResult, callInContext, self.context, func, *args, **kwargs
+        )
 
 
 class ThreadWorkerContext(threading.local):
@@ -954,6 +945,7 @@ class ThreadPoolLimiter:
         self.clock = clock
         if self.clock is None:
             from twisted.internet import reactor
+
             self.clock = reactor
 
     start = property(attrgetter("pool.start"))
@@ -984,10 +976,13 @@ class ThreadPoolLimiter:
                     done[0] = True
 
         if onResult is None:
+
             def callback(success, result, lock=self.lock):
                 # Ignore the result; it was never wanted anyway.
                 self.clock.callFromThread(release, lock)
+
         else:
+
             def callback(success, result, lock=self.lock):
                 # Make the callback before releasing the lock.
                 try:
@@ -1000,7 +995,7 @@ class ThreadPoolLimiter:
                 # If this fails we have serious problems. On the other hand,
                 # if this succeeds we have handed off all responsibility.
                 pool.callInThreadWithCallback(callback, func, *args, **kwargs)
-            except:
+            except Exception:
                 try:
                     if onResult is None:
                         raise  # Don't suppress this; it's bad.
@@ -1009,8 +1004,11 @@ class ThreadPoolLimiter:
                 finally:
                     release(lock)
 
-        return self.lock.acquire().addCallback(locked).addErrback(
-            log.err, "Critical failure arranging call in thread")
+        return (
+            self.lock.acquire()
+            .addCallback(locked)
+            .addErrback(log.err, "Critical failure arranging call in thread")
+        )
 
 
 def makeDeferredWithProcessProtocol():
@@ -1024,14 +1022,16 @@ def makeDeferredWithProcessProtocol():
     protocol = ProcessProtocol()
     # Call the errback if the "failure" object indicates a non-zero exit.
     protocol.processEnded = lambda reason: (
-        done.errback(reason) if (reason and not reason.check(ProcessDone))
-        else done.callback(None))
+        done.errback(reason)
+        if (reason and not reason.check(ProcessDone))
+        else done.callback(None)
+    )
     return done, protocol
 
 
 def terminateProcess(
-        pid, done, *, term_after=0.0, quit_after=5.0, kill_after=10.0,
-        reactor=None):
+    pid, done, *, term_after=0.0, quit_after=5.0, kill_after=10.0, reactor=None
+):
     """Terminate the given process.
 
     A "sensible" way to terminate a process. Does the following:
@@ -1145,8 +1145,10 @@ def reducedWebLogFormatter(timestamp, request):
     return template.format(
         referrer=field(request.getHeader(b"referer"), "-"),
         agent=field(request.getHeader(b"user-agent"), "-"),
-        status=describeHttpStatus(request.code), origin=origin,
-        method=field(request.method, "???"), uri=field(request.uri, "-"),
+        status=describeHttpStatus(request.code),
+        origin=origin,
+        method=field(request.method, "???"),
+        uri=field(request.uri, "-"),
         proto=field(request.clientproto, "-"),
     )
 
@@ -1160,7 +1162,8 @@ class SiteNoLog(Site):
 
 
 def getProcessOutputAndValue(
-        executable, args=(), env={}, path=None, reactor=None):
+    executable, args=(), env={}, path=None, reactor=None
+):
     """Utility to create a process in the reactor and get all the output and
     return code of that process.
 
@@ -1175,13 +1178,17 @@ def getProcessOutputAndValue(
     d = Deferred()
     proc = reactor.spawnProcess(
         _EverythingGetter(d),
-        executable, (executable,) + tuple(args), env, None)
+        executable,
+        (executable,) + tuple(args),
+        env,
+        None,
+    )
 
     def _cleanup(result):
         # Always reap the process
         try:
             proc.reapProcess()
-        except:
+        except Exception:
             # Allow the error to occur, in the case the process has
             # already been reaped.
             pass

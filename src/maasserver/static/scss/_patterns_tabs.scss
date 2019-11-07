@@ -13,18 +13,30 @@
     &::before {
       display: none;
       // white fade so chevron doesn't overlap tabs
-      background: -moz-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
-      background: -webkit-linear-gradient(left, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
-      background: linear-gradient(to right, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);
+      background: -moz-linear-gradient(
+        left,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+      );
+      background: -webkit-linear-gradient(
+        left,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+      );
+      background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+      );
       filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#ffffff',GradientType=1 );
 
-      padding-left: $sph-intra--expanded;
+      padding-left: $sph-inner--large;
       padding-right: 0;
       right: $grid-margin-width;
       $chevron-font-size: 2rem;
       $chevron-width-at-1rem: 4.4; // in px
       $chevron-rendered-width: $chevron-font-size * $chevron-width-at-1rem / 16; // divide by 16 to account for units (1 rem == 16px)
-      width: $chevron-rendered-width + $sph-intra--expanded; // spacing used in buttons + width of symbol
+      width: $chevron-rendered-width + $sph-inner--large; // spacing used in buttons + width of symbol
       z-index: 1;
     }
 
@@ -45,12 +57,15 @@
     // XXX: 27.06.2018: remove the float as well when the above pr is merged into vanilla
     &__item {
       float: none;
-      font-size: $font-base-size; //XXX (2): restore font-size after removing white-space around inline-block items above
+      font-size: map-get(
+        $base-font-sizes,
+        base
+      ); //XXX (2): restore font-size after removing white-space around inline-block items above
     }
 
     &__link {
       &.is-active {
-        @extend .p-tabs__link[aria-selected="true"];
+        @include vf-highlight-bar($color-mid-dark, bottom, true);
       }
     }
   }

@@ -3,13 +3,16 @@
  * The data should come from the backend
  * There is a launchpad issue for this (LP: #1802307)
  */
-angular.module('MAAS').service('KVMDeployOSBlacklist', function() {
+
+function KVMDeployOSBlacklist() {
   return [
-    'ubuntu/precise',
-    'ubuntu/trusty',
-    'ubuntu/xenial',
-    'ubuntu/yakkety',
-    'ubuntu/zesty',
-    'ubuntu/artful'
+    "ubuntu/precise",
+    "ubuntu/trusty",
+    "ubuntu/xenial",
+    "ubuntu/yakkety",
+    "ubuntu/zesty",
+    "ubuntu/artful"
   ];
-});
+}
+
+export default KVMDeployOSBlacklist;

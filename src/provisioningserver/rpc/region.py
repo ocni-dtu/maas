@@ -42,10 +42,7 @@ from provisioningserver.rpc.arguments import (
     ParsedURL,
     StructureAsJSON,
 )
-from provisioningserver.rpc.common import (
-    Authenticate,
-    Identify,
-)
+from provisioningserver.rpc.common import Authenticate, Identify
 from provisioningserver.rpc.exceptions import (
     BootConfigNoResponse,
     CannotRegisterRackController,
@@ -83,10 +80,9 @@ class RegisterRackController(amp.Command):
         (b"system_id", amp.Unicode()),
         (b"beacon_support", amp.Boolean(optional=True)),
         (b"version", amp.Unicode(optional=True)),
+        (b"uuid", amp.Unicode(optional=True)),
     ]
-    errors = {
-        CannotRegisterRackController: b"CannotRegisterRackController",
-    }
+    errors = {CannotRegisterRackController: b"CannotRegisterRackController"}
 
 
 class ReportBootImages(amp.Command):
@@ -98,11 +94,17 @@ class ReportBootImages(amp.Command):
     arguments = [
         # The cluster UUID.
         (b"uuid", amp.Unicode()),
-        (b"images", AmpList(
-            [(b"architecture", amp.Unicode()),
-             (b"subarchitecture", amp.Unicode()),
-             (b"release", amp.Unicode()),
-             (b"purpose", amp.Unicode())])),
+        (
+            b"images",
+            AmpList(
+                [
+                    (b"architecture", amp.Unicode()),
+                    (b"subarchitecture", amp.Unicode()),
+                    (b"release", amp.Unicode()),
+                    (b"purpose", amp.Unicode()),
+                ]
+            ),
+        ),
     ]
     response = []
     errors = []
@@ -152,9 +154,7 @@ class GetBootConfig(amp.Command):
         # not defined.
         (b"http_boot", amp.Boolean(optional=True)),
     ]
-    errors = {
-        BootConfigNoResponse: b"BootConfigNoResponse",
-    }
+    errors = {BootConfigNoResponse: b"BootConfigNoResponse"}
 
 
 class GetBootSources(amp.Command):
@@ -166,17 +166,29 @@ class GetBootSources(amp.Command):
 
     arguments = [
         # The cluster UUID.
-        (b"uuid", amp.Unicode()),
+        (b"uuid", amp.Unicode())
     ]
     response = [
-        (b"sources", AmpList(
-            [(b"url", amp.Unicode()),
-             (b"keyring_data", Bytes()),
-             (b"selections", AmpList(
-                 [(b"release", amp.Unicode()),
-                  (b"arches", amp.ListOf(amp.Unicode())),
-                  (b"subarches", amp.ListOf(amp.Unicode())),
-                  (b"labels", amp.ListOf(amp.Unicode()))]))])),
+        (
+            b"sources",
+            AmpList(
+                [
+                    (b"url", amp.Unicode()),
+                    (b"keyring_data", Bytes()),
+                    (
+                        b"selections",
+                        AmpList(
+                            [
+                                (b"release", amp.Unicode()),
+                                (b"arches", amp.ListOf(amp.Unicode())),
+                                (b"subarches", amp.ListOf(amp.Unicode())),
+                                (b"labels", amp.ListOf(amp.Unicode())),
+                            ]
+                        ),
+                    ),
+                ]
+            ),
+        )
     ]
     errors = []
 
@@ -191,18 +203,30 @@ class GetBootSourcesV2(amp.Command):
 
     arguments = [
         # The cluster UUID.
-        (b"uuid", amp.Unicode()),
+        (b"uuid", amp.Unicode())
     ]
     response = [
-        (b"sources", AmpList(
-            [(b"url", amp.Unicode()),
-             (b"keyring_data", Bytes()),
-             (b"selections", AmpList(
-                 [(b"os", amp.Unicode()),
-                  (b"release", amp.Unicode()),
-                  (b"arches", amp.ListOf(amp.Unicode())),
-                  (b"subarches", amp.ListOf(amp.Unicode())),
-                  (b"labels", amp.ListOf(amp.Unicode()))]))])),
+        (
+            b"sources",
+            AmpList(
+                [
+                    (b"url", amp.Unicode()),
+                    (b"keyring_data", Bytes()),
+                    (
+                        b"selections",
+                        AmpList(
+                            [
+                                (b"os", amp.Unicode()),
+                                (b"release", amp.Unicode()),
+                                (b"arches", amp.ListOf(amp.Unicode())),
+                                (b"subarches", amp.ListOf(amp.Unicode())),
+                                (b"labels", amp.ListOf(amp.Unicode())),
+                            ]
+                        ),
+                    ),
+                ]
+            ),
+        )
     ]
     errors = []
 
@@ -212,11 +236,9 @@ class GetArchiveMirrors(amp.Command):
 
     :since: 1.7
     """
+
     arguments = []
-    response = [
-        (b"main", ParsedURL()),
-        (b"ports", ParsedURL()),
-    ]
+    response = [(b"main", ParsedURL()), (b"ports", ParsedURL())]
     errors = []
 
 
@@ -270,21 +292,25 @@ class ListNodePowerParameters(amp.Command):
 
     arguments = [
         # The cluster UUID.
-        (b"uuid", amp.Unicode()),
+        (b"uuid", amp.Unicode())
     ]
     response = [
-        (b"nodes", AmpList(
-            [(b"system_id", amp.Unicode()),
-             (b"hostname", amp.Unicode()),
-             (b"power_state", amp.Unicode()),
-             (b"power_type", amp.Unicode()),
-             # We can't define a tighter schema here because this is a highly
-             # variable bag of arguments from a variety of sources.
-             (b"context", StructureAsJSON())])),
+        (
+            b"nodes",
+            AmpList(
+                [
+                    (b"system_id", amp.Unicode()),
+                    (b"hostname", amp.Unicode()),
+                    (b"power_state", amp.Unicode()),
+                    (b"power_type", amp.Unicode()),
+                    # We can't define a tighter schema here because this is a highly
+                    # variable bag of arguments from a variety of sources.
+                    (b"context", StructureAsJSON()),
+                ]
+            ),
+        )
     ]
-    errors = {
-        NoSuchCluster: b"NoSuchCluster",
-    }
+    errors = {NoSuchCluster: b"NoSuchCluster"}
 
 
 class UpdateLastImageSync(amp.Command):
@@ -295,7 +321,7 @@ class UpdateLastImageSync(amp.Command):
 
     arguments = [
         # A rack controller's system_id.
-        (b'system_id', amp.Unicode()),
+        (b"system_id", amp.Unicode())
     ]
     response = []
     errors = []
@@ -349,7 +375,7 @@ class SendEvent(amp.Command):
         # by the region controller as of MAAS 1.9 because the region no longer
         # waits for the database work to complete.
         NoSuchNode: b"NoSuchNode",
-        NoSuchEventType: b"NoSuchEventType"
+        NoSuchEventType: b"NoSuchEventType",
     }
 
 
@@ -370,7 +396,7 @@ class SendEventMACAddress(amp.Command):
         # by the region controller as of MAAS 1.9 because the region no longer
         # waits for the database work to complete.
         NoSuchNode: b"NoSuchNode",
-        NoSuchEventType: b"NoSuchEventType"
+        NoSuchEventType: b"NoSuchEventType",
     }
 
 
@@ -386,10 +412,7 @@ class SendEventIPAddress(amp.Command):
         (b"description", amp.Unicode()),
     ]
     response = []
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-        NoSuchEventType: b"NoSuchEventType"
-    }
+    errors = {NoSuchNode: b"NoSuchNode", NoSuchEventType: b"NoSuchEventType"}
 
 
 class ReportForeignDHCPServer(amp.Command):
@@ -413,14 +436,9 @@ class ReportMDNSEntries(amp.Command):
     :since: 2.1
     """
 
-    arguments = [
-        (b'system_id', amp.Unicode()),
-        (b'mdns', StructureAsJSON()),
-    ]
+    arguments = [(b"system_id", amp.Unicode()), (b"mdns", StructureAsJSON())]
     response = []
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class ReportNeighbours(amp.Command):
@@ -430,13 +448,11 @@ class ReportNeighbours(amp.Command):
     """
 
     arguments = [
-        (b'system_id', amp.Unicode()),
-        (b'neighbours', StructureAsJSON()),
+        (b"system_id", amp.Unicode()),
+        (b"neighbours", StructureAsJSON()),
     ]
     response = []
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class CreateNode(amp.Command):
@@ -446,19 +462,15 @@ class CreateNode(amp.Command):
     """
 
     arguments = [
-        (b'architecture', amp.Unicode()),
-        (b'power_type', amp.Unicode()),
-        (b'power_parameters', amp.Unicode()),
-        (b'mac_addresses', amp.ListOf(amp.Unicode())),
-        (b'hostname', amp.Unicode(optional=True)),
-        (b'domain', amp.Unicode(optional=True)),
+        (b"architecture", amp.Unicode()),
+        (b"power_type", amp.Unicode()),
+        (b"power_parameters", amp.Unicode()),
+        (b"mac_addresses", amp.ListOf(amp.Unicode())),
+        (b"hostname", amp.Unicode(optional=True)),
+        (b"domain", amp.Unicode(optional=True)),
     ]
-    response = [
-        (b'system_id', amp.Unicode()),
-    ]
-    errors = {
-        NodeAlreadyExists: b"NodeAlreadyExists",
-    }
+    response = [(b"system_id", amp.Unicode())]
+    errors = {NodeAlreadyExists: b"NodeAlreadyExists"}
 
 
 class CommissionNode(amp.Command):
@@ -467,14 +479,9 @@ class CommissionNode(amp.Command):
     :since: 1.7
     """
 
-    arguments = [
-        (b'system_id', amp.Unicode()),
-        (b'user', amp.Unicode()),
-    ]
+    arguments = [(b"system_id", amp.Unicode()), (b"user", amp.Unicode())]
     response = []
-    errors = {
-        CommissionNodeFailed: b"CommissionNodeFailed",
-    }
+    errors = {CommissionNodeFailed: b"CommissionNodeFailed"}
 
 
 class UpdateInterfaces(amp.Command):
@@ -484,9 +491,9 @@ class UpdateInterfaces(amp.Command):
     """
 
     arguments = [
-        (b'system_id', amp.Unicode()),
-        (b'interfaces', StructureAsJSON()),
-        (b'topology_hints', StructureAsJSON(optional=True)),
+        (b"system_id", amp.Unicode()),
+        (b"interfaces", StructureAsJSON()),
+        (b"topology_hints", StructureAsJSON(optional=True)),
     ]
     response = []
     errors = []
@@ -498,15 +505,9 @@ class GetDiscoveryState(amp.Command):
     :since: 2.1
     """
 
-    arguments = [
-        (b'system_id', amp.Unicode()),
-    ]
-    response = [
-        (b'interfaces', StructureAsJSON()),
-    ]
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    arguments = [(b"system_id", amp.Unicode())]
+    response = [(b"interfaces", StructureAsJSON())]
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class RequestNodeInfoByMACAddress(amp.Command):
@@ -515,9 +516,7 @@ class RequestNodeInfoByMACAddress(amp.Command):
     :since: 1.7
     """
 
-    arguments = [
-        (b"mac_address", amp.Unicode()),
-    ]
+    arguments = [(b"mac_address", amp.Unicode())]
     response = [
         (b"system_id", amp.Unicode()),
         (b"hostname", amp.Unicode()),
@@ -528,9 +527,7 @@ class RequestNodeInfoByMACAddress(amp.Command):
         (b"architecture", amp.Unicode()),
         (b"purpose", amp.Unicode()),
     ]
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class UpdateLease(amp.Command):
@@ -539,6 +536,7 @@ class UpdateLease(amp.Command):
 
     :since: 2.0
     """
+
     arguments = [
         (b"cluster_uuid", amp.Unicode()),
         (b"action", amp.Unicode()),
@@ -550,9 +548,7 @@ class UpdateLease(amp.Command):
         (b"hostname", amp.Unicode(optional=True)),
     ]
     response = []
-    errors = {
-        NoSuchCluster: b"NoSuchCluster",
-    }
+    errors = {NoSuchCluster: b"NoSuchCluster"}
 
 
 class UpdateServices(amp.Command):
@@ -563,15 +559,19 @@ class UpdateServices(amp.Command):
 
     arguments = [
         (b"system_id", amp.Unicode()),
-        (b"services", AmpList(
-            [(b"name", amp.Unicode()),
-             (b"status", amp.Unicode()),
-             (b"status_info", amp.Unicode())])),
+        (
+            b"services",
+            AmpList(
+                [
+                    (b"name", amp.Unicode()),
+                    (b"status", amp.Unicode()),
+                    (b"status_info", amp.Unicode()),
+                ]
+            ),
+        ),
     ]
     response = []
-    errors = {
-        NoSuchCluster: b"NoSuchCluster",
-    }
+    errors = {NoSuchCluster: b"NoSuchCluster"}
 
 
 class RequestRackRefresh(amp.Command):
@@ -580,9 +580,7 @@ class RequestRackRefresh(amp.Command):
     :since: 2.0
     """
 
-    arguments = [
-        (b"system_id", amp.Unicode()),
-    ]
+    arguments = [(b"system_id", amp.Unicode())]
     response = []
     errors = []
 
@@ -593,16 +591,9 @@ class GetControllerType(amp.Command):
     :since: 2.1
     """
 
-    arguments = [
-        (b"system_id", amp.Unicode()),
-    ]
-    response = [
-        (b"is_region", amp.Boolean()),
-        (b"is_rack", amp.Boolean()),
-    ]
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    arguments = [(b"system_id", amp.Unicode())]
+    response = [(b"is_region", amp.Boolean()), (b"is_rack", amp.Boolean())]
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class GetTimeConfiguration(amp.Command):
@@ -611,16 +602,12 @@ class GetTimeConfiguration(amp.Command):
     :since: 2.1
     """
 
-    arguments = [
-        (b"system_id", amp.Unicode()),
-    ]
+    arguments = [(b"system_id", amp.Unicode())]
     response = [
         (b"servers", amp.ListOf(amp.Unicode())),
         (b"peers", amp.ListOf(amp.Unicode())),
     ]
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class GetDNSConfiguration(amp.Command):
@@ -629,15 +616,9 @@ class GetDNSConfiguration(amp.Command):
     :since: 2.5
     """
 
-    arguments = [
-        (b"system_id", amp.Unicode()),
-    ]
-    response = [
-        (b"trusted_networks", amp.ListOf(amp.Unicode())),
-    ]
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    arguments = [(b"system_id", amp.Unicode())]
+    response = [(b"trusted_networks", amp.ListOf(amp.Unicode()))]
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class GetProxyConfiguration(amp.Command):
@@ -646,18 +627,14 @@ class GetProxyConfiguration(amp.Command):
     :since: 2.5
     """
 
-    arguments = [
-        (b"system_id", amp.Unicode()),
-    ]
+    arguments = [(b"system_id", amp.Unicode())]
     response = [
         (b"enabled", amp.Boolean()),
         (b"port", amp.Integer()),
         (b"allowed_cidrs", amp.ListOf(amp.Unicode())),
         (b"prefer_v4_proxy", amp.Boolean()),
     ]
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    errors = {NoSuchNode: b"NoSuchNode"}
 
 
 class GetSyslogConfiguration(amp.Command):
@@ -666,12 +643,6 @@ class GetSyslogConfiguration(amp.Command):
     :since: 2.5
     """
 
-    arguments = [
-        (b"system_id", amp.Unicode()),
-    ]
-    response = [
-        (b"port", amp.Integer()),
-    ]
-    errors = {
-        NoSuchNode: b"NoSuchNode",
-    }
+    arguments = [(b"system_id", amp.Unicode())]
+    response = [(b"port", amp.Integer())]
+    errors = {NoSuchNode: b"NoSuchNode"}

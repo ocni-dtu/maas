@@ -3,9 +3,7 @@
 
 """Load all power drivers."""
 
-__all__ = [
-    "PowerDriverRegistry",
-    ]
+__all__ = ["PowerDriverRegistry"]
 
 from jsonschema import validate
 from provisioningserver.drivers.pod.registry import PodDriverRegistry
@@ -21,6 +19,7 @@ from provisioningserver.drivers.power.moonshot import MoonshotIPMIPowerDriver
 from provisioningserver.drivers.power.mscm import MSCMPowerDriver
 from provisioningserver.drivers.power.msftocs import MicrosoftOCSPowerDriver
 from provisioningserver.drivers.power.nova import NovaPowerDriver
+from provisioningserver.drivers.power.openbmc import OpenBMCPowerDriver
 from provisioningserver.drivers.power.recs import RECSPowerDriver
 from provisioningserver.drivers.power.redfish import RedfishPowerDriver
 from provisioningserver.drivers.power.seamicro import SeaMicroPowerDriver
@@ -61,6 +60,7 @@ power_drivers = [
     MSCMPowerDriver(),
     MicrosoftOCSPowerDriver(),
     NovaPowerDriver(),
+    OpenBMCPowerDriver(),
     RECSPowerDriver(),
     RedfishPowerDriver(),
     SeaMicroPowerDriver(),

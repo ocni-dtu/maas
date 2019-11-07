@@ -4,21 +4,18 @@
  * Unit tests for ConfigsManager.
  */
 
-
 describe("ConfigsManager", function() {
+  // Load the MAAS module.
+  beforeEach(angular.mock.module("MAAS"));
 
-    // Load the MAAS module.
-    beforeEach(module("MAAS"));
+  // Load the ConfigsManager.
+  var ConfigsManager;
+  beforeEach(inject(function($injector) {
+    ConfigsManager = $injector.get("ConfigsManager");
+  }));
 
-    // Load the ConfigsManager.
-    var ConfigsManager, RegionConnection;
-    beforeEach(inject(function($injector) {
-        ConfigsManager = $injector.get("ConfigsManager");
-        RegionConnection = $injector.get("RegionConnection");
-    }));
-
-    it("set requires attributes", function() {
-        expect(ConfigsManager._pk).toBe("name");
-        expect(ConfigsManager._handler).toBe("config");
-    });
+  it("set requires attributes", function() {
+    expect(ConfigsManager._pk).toBe("name");
+    expect(ConfigsManager._handler).toBe("config");
+  });
 });

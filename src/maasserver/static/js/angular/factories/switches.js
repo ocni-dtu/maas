@@ -9,55 +9,53 @@
  * notification events about switches.
  */
 
-angular.module('MAAS').factory(
-    'SwitchesManager',
-    ['$q', '$rootScope', 'RegionConnection', 'NodesManager', function(
-            $q, $rootScope, RegionConnection, NodesManager) {
+function SwitchesManager(RegionConnection, NodesManager) {
+  function SwitchesManager() {
+    NodesManager.call(this);
 
-        function SwitchesManager() {
-            NodesManager.call(this);
+    this._pk = "system_id";
+    this._handler = "switch";
+    this._metadataAttributes = {
+      owner: null,
+      subnets: null,
+      tags: null,
+      zone: function(device) {
+        return device.zone.name;
+      }
+    };
 
-            this._pk = "system_id";
-            this._handler = "switch";
-            this._metadataAttributes = {
-                "owner": null,
-                "subnets": null,
-                "tags": null,
-                "zone": function(device) {
-                    return device.zone.name;
-                }
-            };
+    // Listen for notify events for the switch object.
+    var self = this;
+    RegionConnection.registerNotifier("switch", function(action, data) {
+      self.onNotify(action, data);
+    });
+  }
 
-            // Listen for notify events for the switch object.
-            var self = this;
-            RegionConnection.registerNotifier("switch", function(action, data) {
-                self.onNotify(action, data);
-            });
-        }
+  SwitchesManager.prototype = new NodesManager();
 
-        SwitchesManager.prototype = new NodesManager();
+  // Create a switch.
+  SwitchesManager.prototype.create = function(node) {
+    // We don't add the item to the list because a NOTIFY event will
+    // add the device to the list. Adding it here will cause angular to
+    // complain because the same object exist in the list.
+    return RegionConnection.callMethod("switch.create", node);
+  };
 
-        // Create a switch.
-        SwitchesManager.prototype.create = function(node) {
-            // We don't add the item to the list because a NOTIFY event will
-            // add the device to the list. Adding it here will cause angular to
-            // complain because the same object exist in the list.
-            return RegionConnection.callMethod("switch.create", node);
-        };
+  // Perform the action on the switch.
+  SwitchesManager.prototype.performAction = function(device, action, extra) {
+    if (!angular.isObject(extra)) {
+      extra = {};
+    }
+    return RegionConnection.callMethod("switch.action", {
+      system_id: device.system_id,
+      action: action,
+      extra: extra
+    });
+  };
 
-        // Perform the action on the switch.
-        SwitchesManager.prototype.performAction = function(
-            device, action, extra) {
+  return new SwitchesManager();
+}
 
-            if(!angular.isObject(extra)) {
-                extra = {};
-            }
-            return RegionConnection.callMethod("switch.action", {
-                "system_id": device.system_id,
-                "action": action,
-                "extra": extra
-                });
-        };
+SwitchesManager.$inject = ["RegionConnection", "NodesManager"];
 
-        return new SwitchesManager();
-    }]);
+export default SwitchesManager;

@@ -3,11 +3,7 @@
 
 """Test executors for MAAS."""
 
-__all__ = [
-    'MAASCrochetRunTest',
-    'MAASRunTest',
-    'MAASTwistedRunTest',
-    ]
+__all__ = ["MAASCrochetRunTest", "MAASRunTest", "MAASTwistedRunTest"]
 
 import os
 import sys
@@ -15,15 +11,8 @@ import threading
 import traceback
 import types
 
-from testtools import (
-    deferredruntest,
-    runtest,
-)
-from twisted.internet import (
-    defer,
-    interfaces,
-    reactor,
-)
+from testtools import deferredruntest, runtest
+from twisted.internet import defer, interfaces, reactor
 from twisted.internet.base import DelayedCall
 from twisted.internet.defer import (
     Deferred,
@@ -32,10 +21,7 @@ from twisted.internet.defer import (
     returnValue,
 )
 from twisted.internet.process import reapAllProcesses
-from twisted.internet.task import (
-    deferLater,
-    LoopingCall,
-)
+from twisted.internet.task import deferLater, LoopingCall
 from twisted.internet.threads import blockingCallFromThread
 
 
@@ -75,7 +61,8 @@ def check_for_generator(result):
     if isinstance(result, types.GeneratorType):
         raise InvalidTest(
             "Test returned a generator. Should it be "
-            "decorated with inlineCallbacks?")
+            "decorated with inlineCallbacks?"
+        )
     else:
         return result
 
@@ -87,7 +74,8 @@ def check_for_deferred(result):
             "managed by crochet the test method needs to be decorated "
             "with `crochet.wait_for`. In other cases the test class needs "
             "to define `run_tests_with` with a runner that understands "
-            "Twisted, such as `MAASTwistedRunTest`.")
+            "Twisted, such as `MAASTwistedRunTest`."
+        )
     else:
         return result
 
@@ -102,7 +90,7 @@ def call_belongs_to_internals(call):
 
     :type call: :class:`DelayedCall`
     """
-    if call.func.__module__ == 'twisted.internet.asyncioreactor':
+    if call.func.__module__ == "twisted.internet.asyncioreactor":
         return True
     elif isinstance(call.func, LoopingCall):
         return call.func.f is reapAllProcesses
@@ -139,7 +127,7 @@ class MAASRunTest(runtest.RunTest):
             check_for_generator(result)
             check_for_deferred(result)
             return result
-        except:
+        except Exception:
             return self._got_user_exception(sys.exc_info())
 
 
@@ -192,9 +180,11 @@ class MAASCrochetDirtyReactorError(Exception):
         """Return a multi-line message describing all of the unclean state."""
         msg = "Reactor was unclean."
         if len(self.delayedCalls) > 0:
-            msg += ("\nDelayedCalls: (set "
-                    "twisted.internet.base.DelayedCall.debug = True to "
-                    "debug)\n")
+            msg += (
+                "\nDelayedCalls: (set "
+                "twisted.internet.base.DelayedCall.debug = True to "
+                "debug)\n"
+            )
             msg += "\n".join(self.delayedCalls)
         if len(self.selectables) > 0:
             msg += "\nSelectables:\n"
@@ -222,7 +212,7 @@ class MAASCrochetRunTest(MAASRunTest):
         super(MAASCrochetRunTest, self)._run_core()
         try:
             self._clean()
-        except:
+        except Exception:
             self._got_user_exception(sys.exc_info())
 
     def _clean(self):
@@ -232,16 +222,19 @@ class MAASCrochetRunTest(MAASRunTest):
         # do it for consistency with them.
         if not self._tickReactor(0.5):
             raise MAASCrochetReactorStalled(
-                "Reactor did not respond after 500ms.")
+                "Reactor did not respond after 500ms."
+            )
         # Ensure that all threadpools are quiet. Do this first because we must
         # crash the whole run if they don't go quiet before the next test.
-        dirtyPools, threadStacks = (
-            blockingCallFromThread(reactor, self._cleanThreads))
+        dirtyPools, threadStacks = blockingCallFromThread(
+            reactor, self._cleanThreads
+        )
         if len(dirtyPools) != 0:
             raise MAASCrochetDirtyThreadsError(dirtyPools, threadStacks)
         # Find leftover delayed calls and selectables in use.
-        dirtyCalls, dirtySelectables = (
-            blockingCallFromThread(reactor, self._cleanReactor))
+        dirtyCalls, dirtySelectables = blockingCallFromThread(
+            reactor, self._cleanReactor
+        )
         if len(dirtyCalls) != 0 or len(dirtySelectables) != 0:
             raise MAASCrochetDirtyReactorError(dirtyCalls, dirtySelectables)
 
@@ -274,13 +267,14 @@ class MAASCrochetRunTest(MAASRunTest):
         """
         for sel in reactor.removeAll():
             if interfaces.IProcessTransport.providedBy(sel):
-                sel.signalProcess('KILL')
+                sel.signalProcess("KILL")
             yield sel
 
     def _cleanThreads(self):
         """Find threadpools still in use and wait for them to quiesce."""
         noisy = [
-            pool for pool in self._getThreadpools()
+            pool
+            for pool in self._getThreadpools()
             if not self._isThreadpoolQuiet(pool)
         ]
 
@@ -291,10 +285,13 @@ class MAASCrochetRunTest(MAASRunTest):
 
         d = DeferredList(
             map(self._waitForThreadpoolToQuiesce, noisy),
-            fireOnOneErrback=True, consumeErrors=True)
+            fireOnOneErrback=True,
+            consumeErrors=True,
+        )
 
         def unwrap(results):
             return [repr(pool) for _, pool in results], stacks
+
         return d.addCallback(unwrap)
 
     def _getThreadpools(self):
@@ -320,7 +317,7 @@ class MAASCrochetRunTest(MAASRunTest):
         else:
             # Despite waiting a long time the pool will not go quiet. The
             # validity of subsequent tests is compromised. Die immediately.
-            print("Threadpool", repr(pool), "is NOT quiet.", file=sys.stderr)
+            print("ThreadPool", repr(pool), "is NOT quiet.", file=sys.stderr)
             os._exit(3)
 
     def _isThreadpoolQuiet(self, pool):

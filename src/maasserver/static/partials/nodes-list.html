@@ -1,7 +1,6 @@
 <header class="p-strip--light is-shallow u-no-padding--bottom page-header" data-ng-class="{'u-no-padding--bottom': currentpage === 'machines' || currentpage === 'pools'}" media-query="min-width: 769px">
     <div class="row flex-row">
         <div class="flex-item">
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
             <h1 class="page-header__title">{$ title $}</h1>
             <p class="page-header__status u-no-margin--top" data-ng-show="loading">
                 <span class="u-text--loading"><i class="p-icon--spinner u-animation--spin"></i> Loading...</span>
@@ -13,7 +12,6 @@
             </p>
         </div>
         <div class="u-align--right" data-ng-show="currentpage === 'machines'">
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
             <div>
                 <ul class="p-inline-list u-no-margin--bottom">
                     <li class="p-inline-list__item" data-ng-show="tabs.machines.selectedItems.length">
@@ -55,15 +53,14 @@
         </div>
 
         <div data-ng-show="currentpage === 'devices' || currentpage === 'controllers'">
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
             <div class="page-header__controls" data-ng-show="currentpage === 'devices'">
                 <div data-ng-hide="tabs.devices.selectedItems.length">
-                    <button class="p-button--neutral"
+                    <button class="p-button--neutral u-no-margin--bottom"
                         data-ng-click="addDevice()"
-                        data-ng-hide="addDeviceScope.viewable">Add device</button>
-                    <button class="p-button--neutral ng-hide"
+                        data-ng-if="!addDeviceScope.viewable">Add device</button>
+                    <button class="p-button--neutral u-no-margin--bottom ng-hide"
                         data-ng-click="cancelAddDevice()"
-                        data-ng-show="addDeviceScope.viewable">Cancel add device</button>
+                        data-ng-if="addDeviceScope.viewable">Cancel add device</button>
                 </div>
                 <ul class="p-inline-list u-no-margin--bottom" data-ng-show="tabs.devices.selectedItems.length">
                     <li class="p-inline-list__item">
@@ -81,17 +78,16 @@
                 </ul>
             </div>
 
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
-            <div class="page-header__controls u-no-margin--top" data-ng-show="currentpage === 'controllers'">
+            <div class="page-header__controls page-header__controls--controllers u-no-margin--top" data-ng-show="currentpage === 'controllers'">
                 <div data-ng-if="!tabs.controllers.selectedItems.length">
                     <button class="p-button--neutral"
                         data-ng-click="tabs.controllers.addController = true"
-                        data-ng-hide="tabs.controllers.addController">Add rack controller</button>
-                    <button class="p-button--neutral ng-hide"
+                        data-ng-if="!tabs.controllers.addController">Add rack controller</button>
+                    <button class="p-button--neutral"
                         data-ng-click="tabs.controllers.addController = false"
-                        data-ng-show="tabs.controllers.addController">Close add rack controller</button>
+                        data-ng-if="tabs.controllers.addController">Close add rack controller</button>
                 </div>
-                <ul class="p-inline-list u-no-margin--top" data-ng-show="tabs.controllers.selectedItems.length">
+                <ul class="p-inline-list u-no-margin--top u-no-margin--bottom" data-ng-show="tabs.controllers.selectedItems.length">
                     <li class="p-inline-list__item">
                         <a data-ng-click="showSelected('controllers')">{$ tabs.controllers.selectedItems.length $} selected&nbsp;</a>
                     </li>
@@ -131,7 +127,7 @@
                      inline="false" save-on-blur="false" after-save="tabs.pools.cancelAddPool">
         <section class="page-header__section row">
           <hr>
-          <div class="p-form p-form--stacked ng-scope">
+          <div class="p-form p-form--stacked row ng-scope">
             <div class="col-6">
               <maas-obj-field
                 type="text" key="name" label="Name (required)" subtle="false"
@@ -158,9 +154,7 @@
     </div>
 
     <div data-ng-repeat="tab in ['machines', 'switches', 'devices']" data-ng-class="{ 'u-hide': !tabs[tab].actionOption }">
-        <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
         <div class="page-header__dropdown">
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
             <div class="row">
                 <div class="col-12">
                     <hr />
@@ -168,10 +162,10 @@
             </div>
             <section class="page-header__section row u-no-margin--top" data-ng-hide="isActionError(tab) || hasActionsInProgress(tab)">
                 <div class="row">
-                    <div class="col-10 ng-hide" data-ng-show="tabs[tab].actionOption.name === 'commission'">
+                    <div class="ng-hide" data-ng-show="tabs[tab].actionOption.name === 'commission'">
                         <form>
                             <div class="row">
-                                <div class="col-5">
+                                <div class="col-6">
                                     <input id="{$ tab $}-enableSSH" type="checkbox" data-ng-model="tabs[tab].commissionOptions.enableSSH">
                                     <label for="{$ tab $}-enableSSH">Allow SSH access and prevent machine powering off</label>
                                     <input id="{$ tab $}-skipBMCConfig" type="checkbox" data-ng-model="tabs[tab].commissionOptions.skipBMCConfig">
@@ -179,7 +173,7 @@
                                     <input id="{$ tab $}-skipNetworking" type="checkbox" data-ng-model="tabs[tab].commissionOptions.skipNetworking">
                                     <label for="{$ tab $}-skipNetworking">Retain network configuration</label>
                                 </div>
-                                <div class="col-5">
+                                <div class="col-6">
                                     <input id="{$ tab $}-skipStorage" type="checkbox" data-ng-model="tabs[tab].commissionOptions.skipStorage">
                                     <label for="{$ tab $}-skipStorage">Retain storage configuration</label>
                                     <input id="{$ tab $}-updateFirmware" type="checkbox" data-ng-model="tabs[tab].commissionOptions.updateFirmware">
@@ -190,7 +184,7 @@
                             </div>
                         </form>
                     </div>
-                    <div class="ng-hide" data-ng-show="tabs[tab].actionOption.name === 'test' || tabs[tab].actionOption.name === 'deploy' || tabs[tab].actionOption.name === 'release' || tabs[tab].actionOption.name === 'set-zone' || tabs[tab].actionOption.name === 'set-pool'">
+                    <div class="ng-hide col-8" data-ng-show="tabs[tab].actionOption.name === 'test' || tabs[tab].actionOption.name === 'deploy' || tabs[tab].actionOption.name === 'release' || tabs[tab].actionOption.name === 'set-zone' || tabs[tab].actionOption.name === 'set-pool'">
                         <form class="p-form">
                             <ul class="p-inline-list--settings u-no-margin--left u-no-padding--left ng-hide" data-ng-show="tabs[tab].actionOption.name === 'test'">
                                 <li class="p-inline-list__item">
@@ -200,7 +194,7 @@
                             </ul>
                             <div class="p-form__group ng-hide" data-ng-show="tabs[tab].actionOption.name === 'deploy'">
                                 <div class="row p-form--stacked">
-                                    <div class="col-12">
+                                    <div class="col-6">
                                         <div class="p-strip is-shallow u-no-padding--top">
                                             <div class="p-form__group" data-maas-os-select="osinfo" data-ng-model="tabs[tab].osSelection" style="width: 100%"></div>
                                         </div>
@@ -209,20 +203,27 @@
                                                 <label class="p-form__label u-no-padding--top">Additional install</label>
                                                 <div class="p-form__control" style="width: 70%">
                                                     <input id="{$ tab $}-installKVM" type="checkbox" data-ng-model="tabs[tab].deployOptions.installKVM" ng-disabled="!nodesManager.isModernUbuntu(tabs['machines'].osSelection)">
-                                                    <label for="{$ tab $}-installKVM" class="u-float--left" style="width:auto; margin-right: 1rem;">
+                                                    <label for="{$ tab $}-installKVM" style="width:auto; margin-right: 1rem; float: left;">
                                                         Register as MAAS KVM host
                                                     </label>
-                                                    <span data-ng-if="!nodesManager.isModernUbuntu(tabs['machines'].osSelection)">
-                                                            <i class="p-icon--warning"></i>
-                                                            <strong>Warning:</strong> Ubuntu 18.04 is the minimum required. <a class="p-link--external" target="_blank" href="https://docs.maas.io/2.5/en/manage-pods-webui#add-a-kvm-host">Learn more</a>.
-                                                    </span>
-                                                    <span data-ng-if="nodesManager.isModernUbuntu(tabs['machines'].osSelection)">
-                                                        <i class="p-icon--information">Information:</i>
-                                                        <a target="_blank" class="p-link--external"
-                                                        href="https://docs.maas.io/2.5/en/manage-pods-webui#add-a-kvm-host">Learn more</a>
+                                                    <span style="display: inline-block; margin-top: .4rem;">
+                                                        <span data-ng-if="!nodesManager.isModernUbuntu(tabs['machines'].osSelection)">
+                                                                <i class="p-icon--warning"></i>
+                                                                <strong>Warning:</strong> Ubuntu 18.04 is the minimum required to create a KVM host. <a class="p-link--external" target="_blank" href="https://docs.maas.io/2.5/en/manage-pods-webui#add-a-kvm-host">Learn more</a>.
+                                                        </span>
+                                                        <span data-ng-if="nodesManager.isModernUbuntu(tabs['machines'].osSelection)">
+                                                            <i class="p-icon--information">Information:</i>
+                                                            <a target="_blank" class="p-link--external"
+                                                            href="https://docs.maas.io/2.5/en/manage-pods-webui#add-a-kvm-host">Learn more</a>
+                                                        </span>
                                                     </span>
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div data-ng-if="isSSHKeyWarning(tab)" class="p-strip is-shallow u-no-padding--top">
+                                            <p class="u-remove-max-width">
+                                                <i class="p-icon--warning">Warning:</i> Login will not be possible because no SSH keys have been added to your account. To add an SSH key, visit <a href="account/prefs/">your account page</a>.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -230,12 +231,14 @@
                                     <div data-maas-release-options="tabs[tab].releaseOptions"></div>
                                 </div>
                             </div>
-                            <div class="p-form__group col-5 ng-hide" data-ng-show="tabs[tab].actionOption.name === 'set-zone'">
-                                <label for="{$ tab $}-zone3" class="p-form__label">Select Zone</label>
-                                <div class="p-form__control u-clearfix">
-                                    <select name="zone" id="{$ tab $}-zone3" data-ng-model="tabs[tab].zoneSelection" data-ng-options="zone as zone.name for zone in zones">
-                                        <option value="" disabled="disabled">Choose a zone</option>
-                                    </select>
+                            <div class="row">
+                                <div class="p-form__group col-6 ng-hide" data-ng-show="tabs[tab].actionOption.name === 'set-zone'">
+                                    <label for="{$ tab $}-zone3" class="p-form__label">Select Zone</label>
+                                    <div class="p-form__control u-clearfix">
+                                        <select name="zone" id="{$ tab $}-zone3" data-ng-model="tabs[tab].zoneSelection" data-ng-options="zone as zone.name for zone in zones">
+                                            <option value="" disabled="disabled">Choose a zone</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="ng-hide" data-ng-show="tabs[tab].actionOption.name === 'set-pool'">
@@ -243,11 +246,11 @@
                                     <ul class="p-inline-list--settings u-no-margin--left u-no-padding--left u-no-margin--top">
                                         <li class="p-inline-list__item col-3">
                                             <input type="radio" name="pool-action" id="pool-select" data-ng-model="tabs[tab].poolAction" value="select-pool" checked="checked"></input>
-                                            <label for="pool-select">Select pool</label>
+                                            <label for="pool-select" style="padding-top: 0.6rem">Select pool</label>
                                         </li>
                                         <li class="p-inline-list__item">
                                             <input type="radio" name="pool-action" id="pool-create" data-ng-model="tabs[tab].poolAction" value="create-pool"></input>
-                                            <label for="pool-create">Create pool</label>
+                                            <label for="pool-create" style="padding-top: 0.6rem">Create pool</label>
                                         </li>
                                     </ul>
                                 </div>
@@ -270,10 +273,10 @@
                     </div>
                     <div class="ng-hide" data-ng-show="tabs[tab].actionOption.name === 'tag'">
                         <div class="row p-form--stacked">
-                            <div class="col-8">
+                            <div class="col-6">
                                 <div class="p-form__group u-clearfix">
-                                    <label class="p-form__label col-2 mobile-col-2 tablet-col-2">Tag machines</label>
-                                    <div class="p-form__control col-3 mobile-col-2 tablet-col-3 tags--inline">
+                                    <label class="p-form__label col-2 col-small-2 col-medium-2">Tag machines</label>
+                                    <div class="p-form__control col-3 col-small-2 col-medium-3 tags--inline">
                                         <span data-ng-repeat="tag in node.tags" data-ng-hide="summary.editing">
                                             <a href="#/machines/?query=tags:({$ tag $})">{$ tag $}</a>
                                         </span>
@@ -283,6 +286,36 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div data-ng-if="tabs[tab].actionOption.name === 'override-failed-testing'">
+                        <div class="row">
+                            <p data-ng-if="tabs[tab].loadingFailedTests">
+                                <i class="p-icon--spinner u-animation--spin"></i>
+                                <span>Loading tests...</span>
+                            </p>
+                            <p data-ng-if="!tabs[tab].loadingFailedTests">
+                                <i class="p-icon--warning"></i>
+                                <span data-ng-if="tabs[tab].selectedItems.length === 1">
+                                    Machine <strong>{$ tabs[tab].selectedItems[0].fqdn $}</strong> has
+                                    <a href="#/{$ tabs[tab].selectedItems[0].link_type $}/{$ tabs[tab].selectedItems[0].system_id $}?area=testing">
+                                        failed {$ getFailedTestCount(tab) $} tests</a>.
+                                </span>
+                                <span data-ng-if="tabs[tab].selectedItems.length > 1">
+                                    <strong>{$ tabs[tab].selectedItems.length $} machines</strong>
+                                    have failed {$ getFailedTestCount(tab) $} tests.
+                                </span>
+                            </p>
+                            <p style="margin-top: -.5rem">Overriding will allow the machine<span data-ng-if="tabs[tab].selectedItems.length > 1">s</span> to be deployed, marked with a warning.</p>
+                            <form>
+                                <input type="checkbox" id="suppress-tests" data-ng-model="tabs[tab].suppressFailedTestsChecked" data-ng-change="toggleHideFailIcons(tab)">
+                                <label for="suppress-tests">Suppress test-failure icons in the machines list. Results remain visible in
+                                    <span data-ng-if="tabs[tab].selectedItems.length === 1">
+                                        <a href="#/{$ tabs[tab].selectedItems[0].link_type $}/{$ tabs[tab].selectedItems[0].system_id $}?area=testing">Machine &gt; Hardware tests</a>.
+                                    </span>
+                                    <span data-ng-if="tabs[tab].selectedItems.length > 1">Machine &gt; Hardware tests.</span>
+                                </label>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -332,10 +365,10 @@
                     </div>
                 </div>
             </section>
-            <section class="page-header__section row" data-ng-hide="isActionError(tab) || hasActionsInProgress(tab)" data-ng-if="tabs[tab].actionOption.name === 'commission' && hasCustomCommissioningScripts()">
-                <form class="p-form p-form--stacked">
-                    <div class="col-8">
-                        <div class="p-form__group u-vertically-center">
+            <section class="page-header__section" data-ng-hide="isActionError(tab) || hasActionsInProgress(tab)" data-ng-if="tabs[tab].actionOption.name === 'commission' && hasCustomCommissioningScripts()">
+                <form class="p-form p-form--stacked row">
+                    <div class="col-6">
+                        <div class="p-form__group">
                             <label class="p-form__label" for="{$ tab $}-commissiong-scripts">Additional commissioning Scripts</label>
                             <div class="p-form__control">
                                 <span id="{$ tab $}-commissioning-scripts" data-maas-script-select="script" data-script-type="0" data-ng-model="tabs[tab].commissioningSelection" class="tags--inline"></span>
@@ -345,21 +378,20 @@
                 </form>
             </section>
             <section class="page-header__section row" data-ng-hide="isActionError(tab) || hasActionsInProgress(tab)" data-ng-if="tabs[tab].actionOption.name === 'commission' || tabs[tab].actionOption.name ==='test'">
-                <hr />
-                <form class="p-form">
-                    <div class="col-8">
-                        <div class="p-form__group">
-                            <label for="{$ tab $}-testing-scripts">Hardware tests</label>
-                            <span id="{$ tab $}-testing-scripts" data-maas-script-select="script" data-script-type="2" data-ng-model="tabs[tab].testSelection" class="tags--inline"></span>
+                <form class="p-form row">
+                    <div class="col-6">
+                        <div class="p-form__group hide-create-tag-label">
+                            <label for="{$ tab $}-testing-scripts">Tests</label>
+                            <span id="{$ tab $}-testing-scripts" data-maas-script-select="script" data-script-type="2" data-ng-model="tabs[tab].testSelection" class="tags--inline" check-test-parameter-values="checkTestParameterValues" set-default-values="setDefaultValues"></span>
                         </div>
                     </div>
                 </form>
             </section>
             <section class="page-header__section row" data-ng-hide="isActionError(tab) || hasActionsInProgress(tab)" data-ng-if="tabs[tab].actionOption.name === 'commission' || tabs[tab].actionOption.name === 'test' && !tabs[tab].actionProgress.showing_confirmation">
                 <hr />
-                <div class="page-header__controls">
+                <div class="page-header__controls u-align--right">
                     <button class="p-button--base" type="button" data-ng-click="actionCancel(tab)">Cancel</button>
-                    <button data-ng-class="tabs[tab].actionOption.name === 'delete' ? 'p-button--negative' : 'p-button--positive'" data-ng-click="actionGo(tab)" data-ng-hide="hasActionsFailed(tab)">
+                    <button data-ng-class="tabs[tab].actionOption.name === 'delete' ? 'p-button--negative' : 'p-button--positive'" data-ng-click="actionGo(tab)" data-ng-hide="hasActionsFailed(tab)" data-ng-disabled="disableTestButton">
                         <span data-ng-if="tabs[tab].actionOption.name === 'commission'">Commission {$ tabs[tab].selectedItems.length $}
                             <span data-ng-pluralize count="tabs[tab].selectedItems.length" when="{'one': 'machine', 'other': 'machines'}"></span>
                         </span>
@@ -367,32 +399,24 @@
                             <span data-ng-pluralize count="tabs[tab].selectedItems.length" when="{'one': 'machine', 'other': 'machines'}"></span>
                         </span>
                     </button>
-                    <button class="p-button--neutral" data-ng-click="actionGo(tab)" data-ng-show="hasActionsFailed(tab)">Retry</button>
+                    <button class="p-button--neutral" data-ng-click="actionGo(tab)" data-ng-if="hasActionsFailed(tab)">Retry</button>
                 </div>
             </section>
 
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
             <section class="page-header__section row u-no-margin--top" data-ng-hide="!isActionError(tab) || hasActionsInProgress(tab)">
                 <div class="col-12">
                     <div class="row">
-                        <p data-ng-hide="isDeployError(tab) || isSSHKeyError(tab)"
+                        <p data-ng-hide="isDeployError(tab)"
                             class="page-header__message page-header__message--error ng-hide">
                             <i class="p-icon--warning">Warning</i>
-                            {$ tabs[tab].actionErrorCount $}
-                            <span data-ng-pluralize count="tabs[tab].actionErrorCount" when="{'1': 'node', 'other': 'nodes'}"></span>
-                            cannot be {$ tabs[tab].actionOption.sentence $}. To proceed, <a data-ng-click="unselectImpossibleNodes(tab)">update your selection</a>.
+                            <span>{$ failedActionSentence $}</span>
+                            <span>To proceed, <a data-ng-click="unselectImpossibleNodes(tab)">update your selection</a>.</span>
                         </p>
                         <p class="page-header__message page-header__message--error ng-hide" data-ng-show="isDeployError(tab)">
                             <i class="p-icon--warning">Warning</i>
                             {$ tabs[tab].selectedItems.length $}
                             <span data-ng-pluralize count="tabs[tab].selectedItems.length" when="{'one': 'node', 'other': 'nodes'}"></span>
                             cannot be {$ tabs[tab].actionOption.sentence $}, because the required boot images have not been imported. To import boot images, visit the <a href="#/images">images page</a>.
-                        </p>
-                        <p class="page-header__message page-header__message--error ng-hide" data-ng-show="isSSHKeyError(tab)">
-                            <i class="p-icon--warning">Warning</i>
-                            {$ tabs[tab].selectedItems.length $}
-                            <span data-ng-pluralize count="tabs[tab].selectedItems.length" when="{'one': 'node', 'other': 'nodes'}"></span>
-                            cannot be {$ tabs[tab].actionOption.sentence $}, because an SSH key has not been added to your account. To add an SSH key, visit <a href="account/prefs/">your account page</a>.
                         </p>
                     </div>
                 </div>
@@ -416,7 +440,6 @@
                     </div>
                 </div>
             </section>
-            <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
             <section class="page-header__section row u-no-margin--top ng-hide" data-ng-show="hasActionsInProgress(tab) || hasActionsFailed(tab)">
                 <div class="col-12">
                     <p class="page-header__message" data-ng-show="hasActionsInProgress(tab)">
@@ -424,15 +447,16 @@
                         {$ tabs[tab].actionProgress.completed $} of {$ tabs[tab].actionProgress.total $}
                         nodes are transitioning to {$ tabs[tab].actionOption.sentence $}.
                     </p>
-                    <div data-ng-repeat="(error, machines) in tabs[tab].actionProgress.errors">
-                        <span class="p-icon--error">Error: </span> The {$ tabs[tab].actionOption.title.toLowerCase() $} action for {$ nodes.length $} <span data-ng-pluralize count="nodes.length" when="{'one': 'node', 'other': 'nodes'}"></span> failed with error: {$ error $}
+                    <div class="p-notification--negative" data-ng-repeat="(error, machines) in tabs[tab].actionProgress.errors">
+                        <p class="p-notification__response">
+                            {$ getHardwareTestErrorText(error, tab) $}
+                        </p>
                     </div>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
     <div class="page-header__dropdown row u-no-margin--top"
         data-ng-class="{ 'u-hide': !addHardwareScope.viewable }"
         data-ng-controller="AddHardwareController">
@@ -440,15 +464,15 @@
         <add-machine data-ng-show="showMachine()"></add-machine>
         <section class="page-header__section col-12 ng-hide" data-ng-show="showChassis()">
             <h4 class="page-header__dropdown-title">Add chassis</h4>
-            <form action="post" class="p-form p-form--stacked">
+            <form action="post" class="p-form p-form--stacked row">
                 <div class="col-6"
                     data-maas-power-parameters="chassisPowerTypes"
                     data-ng-model="chassis.power">
                 </div>
                 <div class="col-6">
-                    <div class="p-form__group">
+                    <div class="p-form__group row">
                         <label for="domain2" class="p-form__label col-2">Domain</label>
-                        <div class="p-form__control">
+                        <div class="p-form__control col-4">
                             <select name="domain" id="domain2"
                                 data-ng-model="chassis.domain"
                                 data-ng-options="domain as domain.name for domain in domains">
@@ -458,7 +482,6 @@
                 </div>
             </form>
         </section>
-        <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
         <section class="page-header__section col-12 ng-hide" data-ng-show="showChassis()">
             <p class="page-header__message page-header__message--error ng-hide" data-ng-show="error">{$ error $}</p>
             <div class="page-header__controls p-strip u-align--right u-no-padding--bottom">
@@ -473,7 +496,6 @@
             </div>
         </section>
 
-        <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
         <section class="page-header__section row" data-ng-hide="architectures.length">
             <p class="page-header__message page-header__message--error">
                 Cannot add {$ mode $} until boot images have been imported. To fix, visit the <a href="#/images">images page</a>.
@@ -481,16 +503,15 @@
         </section>
     </div>
 
-    <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
     <div class="page-header__dropdown" data-ng-class="{ 'u-hide': !addDeviceScope.viewable }" data-ng-controller="AddDeviceController">
         <section class="page-header__section row">
             <hr />
             <h4 class="page-header__dropdown-title">Add device</h4>
-            <form class="p-form p-form--stacked">
+            <form class="p-form p-form--stacked row">
                 <div class="col-6 u-sv3">
-                    <div class="p-form__group">
+                    <div class="p-form__group row">
                         <label for="device-name" class="p-form__label col-2">Name</label>
-                        <div class="p-form__control">
+                        <div class="p-form__control col-4">
                             <div class="p-form-validation" data-ng-class="{ 'is-error': nameHasError() }">
                                 <input type="text" id="device-name" placeholder="Name your device"
                                     class="p-form-validation__input"
@@ -498,9 +519,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="p-form__group">
+                    <div class="p-form__group row">
                         <label for="domain3" class="p-form__label col-2">Domain</label>
-                        <div class="p-form__control">
+                        <div class="p-form__control col-4">
                             <select name="domain" id="domain3"
                                 data-ng-model="device.domain"
                                 data-ng-options="domain as domain.name for domain in domains">
@@ -557,14 +578,14 @@
                             </div>
                         </td>
                         <td class="p-table__cell">
-                            <a class="p-button--neutral"
+                            <a class="p-button--base"
                                 data-ng-click="deleteInterface(interface)"
-                                data-ng-hide="isPrimaryInterface(interface)">Delete</a>
+                                data-ng-hide="isPrimaryInterface(interface)" title="Delete interface"><i class="p-icon--delete">Delete</i></a>
                         </td>
                     </tr>
                 </tbody>
                 <tfoot>
-                    <tr>
+                    <tr class="u-no-border--top">
                         <td>
                             <button class="p-button--neutral" data-ng-click="addInterface()">+ Add another interface</button>
                         </td>
@@ -587,11 +608,8 @@
         </section>
     </div>
 
-    <!-- XXX blake_r 2015-04-02 - Need to add e2e test. -->
     <div class="page-header__dropdown" data-ng-class="{ 'u-hide': !tabs.controllers.actionOption }">
-        <!-- XXX blake_r 2015-04-02 - Need to add e2e test. -->
         <div class="page-header__section col-12 ng-hide" data-ng-hide="isActionError('controllers') || hasActionsInProgress('controllers')">
-            <!-- XXX blake_r 2015-04-02 - Need to add e2e test. -->
             <div class="row" data-ng-if="tabs.controllers.actionOption.name === 'set-zone' || tabs.controllers.actionOption.name === 'test'">
                 <form class="p-form p-form--inline">
                     <div class="ng-hide" data-ng-show="tabs.controllers.actionOption.name === 'set-zone'">
@@ -635,6 +653,10 @@
                         <span data-ng-if="tabs.controllers.actionOption.name === 'import-images'">Import images for {$ tabs.controllers.selectedItems.length $}
                             <span data-ng-pluralize count="tabs.controllers.selectedItems.length" when="{'one': 'controller', 'other': 'controllers'}"></span>
                         </span>
+                        <span data-ng-if="tabs.controllers.actionOption.name === 'override-failed-testing'">Override failed testing for {$ tabs.controllers.selectedItems.length $}
+                            <span data-ng-pluralize count="tabs.controllers.selectedItems.length"
+                                when="{'one': 'controller', 'other': 'controllers'}"></span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -644,8 +666,8 @@
             <div class="row">
                 <form class="p-form">
                     <div class="col-8">
-                        <div class="p-form__group">
-                            <label for="testing-scripts">Hardware Tests</label>
+                        <div class="p-form__group hide-create-tag-label">
+                            <label for="testing-scripts">Tests</label>
                             <span id="testing-scripts" data-maas-script-select="script" data-script-type="2" data-ng-model="tabs.machines.testSelection" class="tags--inline"></span>
                         </div>
                     </div>
@@ -666,15 +688,13 @@
             </div>
         </div>
 
-        <!-- XXX blake_r 2015-04-02 - Need to add e2e test. -->
         <div class="page-header__section col-12 ng-hide" data-ng-show="isActionError('controllers')">
             <div class="row">
                 <div class="p-form p-form--inline">
                     <p class="page-header__message page-header__message--error">
                         <i class="p-icon--error">Error: </i>
-                        {$ tabs.controllers.actionErrorCount $}
-                        <span data-ng-pluralize count="tabs.controllers.selectedItems.length" when="{'one': 'controller', 'other': 'controllers'}"></span>
-                        cannot be {$ tabs.controllers.actionOption.sentence $}. To proceed, update your selection.
+                        <span>{$ failedActionSentence $}</span>
+                        <span>To proceed, <a data-ng-click="unselectImpossibleNodes('controllers')">update your selection</a>.</span>
                     </p>
                 </div>
             </div>
@@ -702,7 +722,6 @@
             </div>
         </section>
 
-        <!-- XXX blake_r 2015-05-07 - Need to add e2e test. -->
         <div class="page-header__section col-12 ng-hide" data-ng-show="hasActionsInProgress('controllers') || hasActionsFailed('controllers')">
             <div class="row">
                 <form class="p-form p-form--inline">
@@ -720,7 +739,6 @@
     </div>
 
     <div class="page-header__dropdown row u-no-margin--top" data-ng-class="{ 'u-hide': !tabs.controllers.addController }">
-        <!-- XXX blake_r 2015-05-07 - Need to add e2e test. -->
         <div class="page-header__section col-12 ng-hide" data-ng-show="tabs.controllers.addController">
             <hr />
             <h4 class="page-header__dropdown-title">Add rack controller</h4>
@@ -761,391 +779,233 @@ sudo maas-rack register --url {$ tabs.controllers.registerUrl $} --secret {$ tab
         <maas-notifications></maas-notifications>
     </div>
 </div>
-<div class="p-strip is-shallow">
-    <div class="row" ng-if="currentpage === 'machines' || currentpage === 'devices'">
-        <aside class="p-filter">
-            <div class="maas-accordion p-filter__dropdown col-3 mobile-col-2 ng-hide" data-ng-show="currentpage === 'machines'" data-ng-class="{ 'is-disabled': tabs.machines.actionOption }">
-                <button class="p-filter__dropdown-button maas-accordion-tab">Filters</button>
-                <div class="p-accordion">
-                    <ul class="p-accordion__list">
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.status.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Status</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="status in tabs.machines.metadata.status | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('status', status.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('status', status.name, 'machines') }">
-                                            {$ status.name $} ({$ status.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.owner.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Owner</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="owner in tabs.machines.metadata.owner | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('owner', owner.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('owner', owner.name, 'machines') }">
-                                            {$ owner.name $} ({$ owner.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.pool.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Resource pools</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="pool in tabs.machines.metadata.pool | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('pool', pool.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('pool', pool.name, 'machines') }">
-                                            {$ pool.name $} ({$ pool.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.architecture.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Architectures</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="architecture in tabs.machines.metadata.architecture | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('architecture', architecture.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('architecture', architecture.name, 'machines') }">
-                                            {$ architecture.name $} ({$ architecture.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.release.length">
-                            <button class="maas-accordion-tab p-accordion__tab">OS/Release</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="release in tabs.machines.metadata.release | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('release', release.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('release', release.name, 'machines') }">
-                                            {$ release.name $} ({$ release.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.tags.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Tags</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="tag in tabs.machines.metadata.tags | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('tags', tag.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('tags', tag.name, 'machines') }">
-                                            {$ tag.name $} ({$ tag.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.storage_tags.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Storage tags</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="tag in tabs.machines.metadata.storage_tags | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('storage_tags', tag.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('storage_tags', tag.name, 'machines') }">
-                                            {$ tag.name $} ({$ tag.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.pod.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Pods</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="pod in tabs.machines.metadata.pod | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('pod', pod.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('pod', pod.name, 'machines') }">
-                                            {$ pod.name $} ({$ pod.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.subnets.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Subnets</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="subnet in tabs.machines.metadata.subnets | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('subnets', subnet.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('subnets', subnet.name, 'machines') }">
-                                            {$ subnet.name $} ({$ subnet.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.fabrics.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Fabrics</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="fabric in tabs.machines.metadata.fabrics | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('fabrics', fabric.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('fabrics', fabric.name, 'machines') }">
-                                            {$ fabric.name $} ({$ fabric.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.spaces.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Spaces</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="space in tabs.machines.metadata.spaces | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('spaces', space.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('spaces', space.name, 'machines') }">
-                                            {$ space.name $} ({$ space.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.machines.metadata.zone.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Zones</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="zone in tabs.machines.metadata.zone | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('zone', zone.name, 'machines')" data-ng-class="{ 'is-active': isFilterActive('zone', zone.name, 'machines') }">
-                                            {$ zone.name $} ({$ zone.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="maas-accordion p-filter__dropdown col-3 mobile-col-2 u-no-margin--left ng-hide" data-ng-show="currentpage === 'devices'" data-ng-class="{ 'is-disabled': tabs.devices.actionOption }">
-                <button class="p-filter__dropdown-button maas-accordion-tab">Filters</button>
-                <div class="p-accordion">
-                    <ul class="p-accordion__list">
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.devices.metadata.owner.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Owner</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="owner in tabs.devices.metadata.owner | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('owner', owner.name, 'devices')" data-ng-class="{ 'is-active': isFilterActive('owner', owner.name, 'devices') }">
-                                            {$ owner.name $} ({$ owner.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.devices.metadata.tags.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Tags</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="tag in tabs.devices.metadata.tags | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('tags', tag.name, 'devices')" data-ng-class="{ 'is-active': isFilterActive('tags', tag.name, 'devices') }">
-                                            {$ tag.name $} ({$ tag.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="p-accordion__group ng-hide" data-ng-show="tabs.devices.metadata.zone.length">
-                            <button class="maas-accordion-tab p-accordion__tab">Zones</button>
-                            <div class="p-accordion__panel">
-                                <ul class="p-list">
-                                    <li class="p-list__item"  data-ng-repeat="zone in tabs.devices.metadata.zone | orderBy:['name', '-count']">
-                                        <a class="p-button--base" href="javascript:;" data-ng-click="toggleFilter('zone', zone.name, 'devices')" data-ng-class="{ 'is-active': isFilterActive('zone', zone.name, 'devices') }">
-                                            {$ zone.name $} ({$ zone.count $})
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </aside>
-        <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
-        <div class="col-12 ng-hide" data-ng-show="currentpage === 'machines'">
-            <form>
-                <div id="search-bar" class="p-search-box prefix-3 mobile-prefix-2">
-                    <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
-                    <input
-                        type="search" placeholder="Search" class="p-search-box__input"
-                        data-ng-model="tabs.machines.search" data-ng-change="updateFilters('machines')"
-                        data-ng-class="{ error: !tabs.machines.searchValid }"
-                        data-ng-disabled="tabs.machines.actionOption" />
-                    <button type="reset" class="p-search-box__reset u-no-margin--right" alt="reset"
-                        data-ng-click="clearSearch('machines')"
-                        data-ng-show="tabs.machines.search.length > 0"><i class="p-icon--close"></i></button>
-                    <button type="submit" class="p-search-box__button" alt="search"><i class="p-icon--search"></i></button>
 
-                </div>
-                <div>
-                    <maas-machines-table id="machines-listing" search="tabs.machines.search" action-option="tabs.machines.actionOption"
-                    ng-disabled="hasActionsInProgress('machines')" machine-has-error="!supportsAction($machine, 'machines')"
-                    on-listing-change="onNodeListingChanged($machines, 'machines')" on-check-all="toggleCheckAll('machines')"
-                    on-check="toggleChecked($machine, 'machines')"></maas-machines-table>
-                </div>
-            </form>
+<div class="p-strip is-shallow" data-ng-if="currentpage === 'machines'">
+    <div class="row">
+        <div class="col-small-4 col-medium-3 col-3">
+            <nodes-list-filter
+                current-page="currentpage"
+                options="tabs.machines.metadata"
+                order="tabs.machines.filterOrder"
+                is-disabled="hasActionsInProgress('machines')"
+                toggle-filter="toggleFilter"
+                is-filter-active="isFilterActive"
+            />
         </div>
-        <div class="col-12" class="ng-hide" data-ng-show="currentpage === 'devices'">
-            <form data-ng-class="{ 'is-error': !tabs.devices.searchValid }">
-                <div id="search-bar" class="p-search-box prefix-3 mobile-prefix-2">
-                    <!-- XXX ricgard 2016-06-16 - Need to add e2e test. -->
-                    <input
-                        type="search" placeholder="Search" class="p-search-box__input"
-                        data-ng-model="tabs.devices.search" data-ng-change="updateFilters('devices')"
-                        data-ng-class="{ error: !tabs.devices.searchValid }"
-                        data-ng-disabled="tabs.devices.actionOption" />
-                    <button type="reset" class="p-search-box__reset u-no-margin--right" alt="reset"
-                        data-ng-click="clearSearch('devices')"
-                        data-ng-show="tabs.devices.search.length > 0"><i class="p-icon--close"></i></button>
-                    <button type="submit" class="p-search-box__button" alt="search"><i class="p-icon--search"></i></button>
-                </div>
-            </form>
-            <table class="p-table-expanding p-table--sortable p-table--devices">
-                <thead>
-                    <tr class="p-table__row">
-                        <th class="p-table__cell">
-                            <!-- XXX rvba 2015-02-25 - Need to add e2e test. -->
-                            <span class="u-float--left">
-                                <input type="checkbox" class="u-float--none" data-ng-click="toggleCheckAll('devices')" data-ng-checked="tabs.devices.allViewableChecked" id="check-all-devices" data-ng-disabled="hasActionsInProgress('devices')" />
-                                <label for="check-all-devices" class="p-form__label"></label>
-                            </span>
-                            <span role="columnheader" data-ng-click="sortTable('fqdn', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'fqdn', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">
-                                <abbr>FQDN</abbr>
-                            </span>
-                        </th>
-                        <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('primary_mac', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'primary_mac', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">MAC</th>
-                        <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('ip_assignment', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'ip_assignment', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}" media-query="min-width: 1000px">IP Assignment</th>
-                        <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('ip_address', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'ip_address', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">IP Address</th>
-                        <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('owner', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'owner', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">
-                            <!-- XXX rvba 2015-02-25 - Need to add e2e test. -->
-                            Owner
-                        </th>
-                    </tr>
-                </thead>
-                <tbody vs-repeat vs-scroll-parent="window">
-                    <!-- XXX rvba 2015-02-25 - Need to add e2e test. This really needs lots of tests. -->
-                    <tr class="p-table__row"
-                        data-ng-repeat="device in tabs.devices.filtered_items = (devices | nodesFilter:tabs.devices.search | orderBy:tabs.devices.predicate:tabs.devices.reverse) track by device.system_id"
-                        data-ng-class="{ 'table--error': !supportsAction(device, 'devices'), 'is-active': device.$selected }">
-                        <td class="p-table__cell" aria-label="FQDN">
-                            <span class="u-float--left">
-                                <input type="checkbox" class="u-float--none" data-ng-click="toggleChecked(device, 'devices')" data-ng-checked="device.$selected" id="{$ device.fqdn $}" data-ng-disabled="hasActionsInProgress('devices')"/>
-                                <label for="{$ device.fqdn $}" class="p-form__label"></label>
-                            </span>
-                            <a class="p-domain-name" href="#/{$ device.link_type $}/{$ device.system_id $}" title="{$ device.fqdn $}">
-                                <span class="p-domain-name__host">{$ device.hostname $}</span><span class="p-domain-name__tld">.{$ device.domain.name $}</span>
-                            </a>
-                        </td>
-                        <td class="p-table__cell" aria-label="MAC" title="{$ device.primary_mac $}">
-                            {$ device.primary_mac $}
-                            <span class="extra-macs" data-ng-show="device.extra_macs.length">(+{$ device.extra_macs.length $})</span>
-                        </td>
-                        <td class="p-table__cell" aria-label="IP Assignment" title="{$ getDeviceIPAssignment(device.ip_assignment) $}">{$ getDeviceIPAssignment(device.ip_assignment) $}</td>
-                        <td class="p-table__cell" aria-label="IP Address" title="{$ device.ip_address $}">{$ device.ip_address $}</td>
-                        <td class="p-table__cell" aria-label="Owner" title="{$ device.owner $}">{$ device.owner $}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="col-small-4 col-medium-3 col-6">
+            <div class="p-search-box">
+                <input
+                    type="search" placeholder="Search" class="p-search-box__input"
+                    data-ng-model="tabs.machines.search" data-ng-change="updateFilters('machines')"
+                    data-ng-class="{ error: !tabs.machines.searchValid }"
+                    data-ng-disabled="tabs.machines.actionOption" />
+                <button type="reset" class="p-search-box__reset u-no-margin--right" alt="reset"
+                    data-ng-click="clearSearch('machines')"
+                    data-ng-show="tabs.machines.search.length > 0"><i class="p-icon--close"></i></button>
+                <button type="submit" class="p-search-box__button" alt="search"><i class="p-icon--search"></i></button>
+            </div>
+        </div>
+        <div class="col-small-4 col-medium-3 col-3">
+            <select data-ng-model="tabs.machines.groupByLabel" ng-init="tabs.machines.groupByLabel='status'">
+                <option value="status" selected="selected">Group by status</option>
+                <option value="owner">Group by owner</option>
+                <option value="none">No grouping</option>
+            </select>
         </div>
     </div>
-    <div class="row ng-hide"  data-ng-show="currentpage === 'pools'">
-        <div class="p-table__wrapper row">
-          <maas-obj-form obj="tabs.pools.editingPool" manager="tabs.pools.manager"
-                         manager-method="updateItem" after-save="tabs.pools.actionConfirmEditPool"
-                         inline="false" save-on-blur="false">
-            <table class="p-table--sortable p-table-expanding p-table--pools">
-                <thead>
-                    <tr class="p-table__row">
-                        <th class="p-table__cell col-3" role="columnheader" data-ng-click="sortTable('name', 'pools')" data-ng-class="{'is-sorted': tabs.pools.predicate === 'name', 'sort-asc': tabs.pools.reverse === false, 'sort-desc': tabs.pools.reverse === true}">Name</th>
-                        <th class="p-table__cell col-2" role="columnheader" data-ng-click="sortTable('machine_total_count', 'pools')" data-ng-class="{'is-sorted': tabs.pools.predicate === 'name', 'sort-asc': tabs.pools.reverse === false, 'sort-desc': tabs.pools.reverse === true}">Machines</th>
-                        <th class="p-table__cell col-5" role="columnheader" data-ng-click="sortTable('description', 'pools')" data-ng-class="{'is-sorted': tabs.pools.predicate === 'description', 'sort-asc': tabs.pools.reverse === false, 'sort-desc': tabs.pools.reverse === true}">Description</th>
-                        <th class="p-table__cell col-2 u-align--right" data-ng-show="showResourcePoolActions()">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="p-table__row"
-                        data-ng-repeat="pool in tabs.pools.filtered_items = (pools | orderBy:tabs.pools.predicate:tabs.pools.reverse) track by pool.name"
-                        data-ng-class="{'is-active': tabs.pools.isPoolAction(pool)}">
-                        <td class="p-table__cell col-3" aria-label="Name">
-                          <span ng-if="!tabs.pools.isPoolAction(pool, 'edit')">
-                            {$ pool.name $} <span ng-if="pool.is_default">(default)</span>
-                          </span>
-                          <maas-obj-field
-                            ng-if="tabs.pools.isPoolAction(pool, 'edit')"
-                            type="text" key="name" disable-label="true" subtle="false"
-                            placeholder="Name (required)">
-                        </td>
-                        <td data-ng-switch on="pool.machine_total_count" class="p-table__cell col-2" aria-label="Machine count">
-                        <span data-ng-switch-when="0"> Empty pool</span>
-                        <a data-ng-switch-default data-ng-click="tabs.pools.goToPoolMachines(pool)">
-                          {$ pool.machine_ready_count == 0 ? 'Zero' : pool.machine_ready_count $} of {$ pool.machine_total_count $} ready
+    <div class="row">
+        <maas-machines-table
+            loading="loading"
+            search="tabs.machines.search"
+            group-by-label="tabs.machines.groupByLabel"
+            action-option="tabs.machines.actionOption"
+            ng-disabled="hasActionsInProgress('machines')"
+            machine-has-error="!supportsAction($machine, 'machines')"
+            on-listing-change="onNodeListingChanged($machines, 'machines')"
+            on-check-all="toggleCheckAll('machines')"
+            on-check="toggleChecked($machine, 'machines')"
+            pools="pools"
+            zones="zones"
+            hide-failed-tests="tabs.machines.suppressFailedTestsChecked"
+            metadata=tabs.machines.metadata
+        />
+    </div>
+</div>
+
+<div class="p-strip is-shallow" data-ng-if="currentpage === 'devices'">
+    <div class="row" data-ng-class="{ 'is-error': !tabs.devices.searchValid }">
+        <div class="col-small-4 col-medium-3 col-3">
+            <nodes-list-filter
+                current-page="currentpage"
+                options="tabs.devices.metadata"
+                order="tabs.devices.filterOrder"
+                is-disabled="tabs.devices.actionOption"
+                toggle-filter="toggleFilter"
+                is-filter-active="isFilterActive"
+            />
+        </div>
+        <div class="col-small-2 col-medium-3 col-9">
+            <div class="p-search-box">
+                <input
+                    type="search" placeholder="Search" class="p-search-box__input"
+                    data-ng-model="tabs.devices.search" data-ng-change="updateFilters('devices')"
+                    data-ng-class="{ error: !tabs.devices.searchValid }"
+                    data-ng-disabled="tabs.devices.actionOption" />
+                <button type="reset" class="p-search-box__reset u-no-margin--right" alt="reset"
+                    data-ng-click="clearSearch('devices')"
+                    data-ng-show="tabs.devices.search.length > 0"><i class="p-icon--close"></i></button>
+                <button type="submit" class="p-search-box__button" alt="search"><i class="p-icon--search"></i></button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <table class="p-table-expanding p-table--sortable p-table--devices">
+            <thead>
+                <tr class="p-table__row">
+                    <th class="p-table__cell">
+                        <span class="u-float--left">
+                            <input type="checkbox" class="u-float--none" data-ng-click="toggleCheckAll('devices')" data-ng-checked="tabs.devices.allViewableChecked" id="check-all-devices" data-ng-disabled="hasActionsInProgress('devices')" />
+                            <label for="check-all-devices" class="p-form__label"></label>
+                        </span>
+                        <span role="columnheader" data-ng-click="sortTable('fqdn', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'fqdn', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">
+                            <abbr>FQDN</abbr>
+                        </span>
+                    </th>
+                    <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('primary_mac', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'primary_mac', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">MAC</th>
+                    <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('ip_assignment', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'ip_assignment', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}" media-query="min-width: 1000px">IP Assignment</th>
+                    <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('ip_address', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'ip_address', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">IP Address</th>
+                    <th class="p-table__cell" role="columnheader" data-ng-click="sortTable('owner', 'devices')" data-ng-class="{'is-sorted': tabs.devices.predicate === 'owner', 'sort-asc': tabs.devices.reverse === false, 'sort-desc': tabs.devices.reverse === true}">
+                        Owner
+                    </th>
+                </tr>
+            </thead>
+            <tbody vs-repeat vs-scroll-parent="window">
+                <tr class="p-table__row"
+                    data-ng-repeat="device in tabs.devices.filtered_items = (devices | nodesFilter:tabs.devices.search | orderBy:tabs.devices.predicate:tabs.devices.reverse) track by device.system_id"
+                    data-ng-class="{ 'table--error': !supportsAction(device, 'devices'), 'is-active': device.$selected }">
+                    <td class="p-table__cell" aria-label="FQDN">
+                        <span class="u-float--left">
+                            <input type="checkbox" class="u-float--none" data-ng-click="toggleChecked(device, 'devices')" data-ng-checked="device.$selected" id="{$ device.fqdn $}" data-ng-disabled="hasActionsInProgress('devices')"/>
+                            <label for="{$ device.fqdn $}" class="p-form__label"></label>
+                        </span>
+                        <a class="p-domain-name" href="#/{$ device.link_type $}/{$ device.system_id $}" title="{$ device.fqdn $}">
+                            <span class="p-domain-name__host">{$ device.hostname $}</span><span class="p-domain-name__tld">.{$ device.domain.name $}</span>
                         </a>
-                        </td>
-                        <td class="p-table__cell col-5" aria-label="Description">
-                          <span ng-if="!tabs.pools.isPoolAction(pool, 'edit')">{$ pool.description $}</span>
-                        </td>
-                        <td class="p-table__cell col-2 u-align--right" aria-label="Actions" data-ng-show="showResourcePoolActions()">
-                          <span data-ng-hide="tabs.pools.isPoolAction(pool)">
-                            <button class="p-button--base is-small u-no-margin--right" data-ng-if="canEditResourcePool(pool)" data-ng-click="tabs.pools.initiatePoolAction(pool, 'edit')">
-                              <i class="p-icon--edit">Edit</i>
-                            </button>
-                            <button class="p-button--base is-small" data-ng-hide="tabs.pools.isDefaultPool(pool)" data-ng-if="canDeleteResourcePool()" data-ng-click="tabs.pools.initiatePoolAction(pool, 'delete')">
-                              <i class="p-icon--delete">Delete</i>
-                            </button>
-                          </span>
-                        </td>
-                        <td class="is-active p-table-expanding__panel col-12" col-span="4"
-                            data-ng-if="tabs.pools.isPoolAction(pool)">
-                          <div class="row" data-ng-if="tabs.pools.isPoolAction(pool, 'edit')">
-                            <div class="col-6">
-                              <div class="p-form-group">
-                                <maas-obj-field
-                                  type="textarea" key="description" label="Description" inline="true"
-                                  subtle="false" input-width="12" class="u-no-margin--left field-description">
-                                </maas-obj-field>
-                              </div>
-                            </div>
-                          </div>
-                          <hr />
-                          <div class="row u-no-margin--top">
-                            <div class="col-6">
-                              <p data-ng-if="tabs.pools.actionErrorMessage">
-                                <span class="p-icon--warning">Warning:</span> {$ tabs.pools.actionErrorMessage $}
-                              </p>
-                              <p data-ng-if="!tabs.pools.actionErrorMessage && tabs.pools.isPoolAction(pool, 'delete')">
-                                Are you sure you want to remove this resource pool?
-                              </p>
-                            </div>
-                            <div class="col-6">
-                              <span class="u-float--right">
-                                <button class="p-button--base" type="button"
-                                        data-ng-click="tabs.pools.cancelPoolAction()">
-                                  Cancel
-                                </button>
-                                <button class="p-button--positive" type="button"
-                                        data-ng-if="tabs.pools.isPoolAction(pool, 'edit')"
-                                        maas-obj-save>
-                                  Save
-                                </button>
-                                <button class="p-button--negative" type="button"
-                                        data-ng-if="tabs.pools.isPoolAction(pool, 'delete')"
-                                        data-ng-click="tabs.pools.actionConfirmDeletePool()">
-                                  Remove
-                                </button>
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-          </maas-obj-form>
-        </div>
+                    </td>
+                    <td class="p-table__cell" aria-label="MAC" title="{$ device.primary_mac $}">
+                        {$ device.primary_mac $}
+                        <span class="extra-macs" data-ng-show="device.extra_macs.length">(+{$ device.extra_macs.length $})</span>
+                    </td>
+                    <td class="p-table__cell" aria-label="IP Assignment" title="{$ getDeviceIPAssignment(device.ip_assignment) $}">{$ getDeviceIPAssignment(device.ip_assignment) $}</td>
+                    <td class="p-table__cell" aria-label="IP Address" title="{$ device.ip_address $}">{$ device.ip_address $}</td>
+                    <td class="p-table__cell" aria-label="Owner" title="{$ device.owner $}">{$ device.owner $}</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-    <div class="row ng-hide"  data-ng-show="currentpage === 'controllers'">
-        <!-- XXX rvba 2015-02-25 - Need to add e2e test. -->
+</div>
+
+<div class="p-strip is-shallow" data-ng-if="currentpage === 'pools'">
+    <div class="row">
+        <maas-obj-form obj="tabs.pools.editingPool" manager="tabs.pools.manager"
+                       manager-method="updateItem" after-save="tabs.pools.actionConfirmEditPool"
+                       inline="false" save-on-blur="false">
+          <table class="p-table--sortable p-table-expanding p-table--pools">
+              <thead>
+                  <tr class="p-table__row">
+                      <th class="p-table__cell col-3" role="columnheader" data-ng-click="sortTable('name', 'pools')" data-ng-class="{'is-sorted': tabs.pools.predicate === 'name', 'sort-asc': tabs.pools.reverse === false, 'sort-desc': tabs.pools.reverse === true}">Name</th>
+                      <th class="p-table__cell col-2" role="columnheader" data-ng-click="sortTable('machine_total_count', 'pools')" data-ng-class="{'is-sorted': tabs.pools.predicate === 'name', 'sort-asc': tabs.pools.reverse === false, 'sort-desc': tabs.pools.reverse === true}">Machines</th>
+                      <th class="p-table__cell col-5" role="columnheader" data-ng-click="sortTable('description', 'pools')" data-ng-class="{'is-sorted': tabs.pools.predicate === 'description', 'sort-asc': tabs.pools.reverse === false, 'sort-desc': tabs.pools.reverse === true}">Description</th>
+                      <th class="p-table__cell col-2 u-align--right" data-ng-show="showResourcePoolActions()">Actions</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr class="p-table__row"
+                      data-ng-repeat="pool in tabs.pools.filtered_items = (pools | orderBy:tabs.pools.predicate:tabs.pools.reverse) track by pool.name"
+                      data-ng-class="{'is-active': tabs.pools.isPoolAction(pool)}">
+                      <td class="p-table__cell col-3" aria-label="Name">
+                        <span ng-if="!tabs.pools.isPoolAction(pool, 'edit')">
+                          {$ pool.name $} <span ng-if="pool.is_default">(default)</span>
+                        </span>
+                        <maas-obj-field
+                          ng-if="tabs.pools.isPoolAction(pool, 'edit')"
+                          type="text" key="name" disable-label="true" subtle="false"
+                          placeholder="Name (required)" disable-row="true">
+                      </td>
+                      <td data-ng-switch on="pool.machine_total_count" class="p-table__cell col-2" aria-label="Machine count">
+                      <span data-ng-switch-when="0"> Empty pool</span>
+                      <a data-ng-switch-default data-ng-click="tabs.pools.goToPoolMachines(pool)">
+                        {$ pool.machine_ready_count == 0 ? 'Zero' : pool.machine_ready_count $} of {$ pool.machine_total_count $} ready
+                      </a>
+                      </td>
+                      <td class="p-table__cell col-5" aria-label="Description">
+                        <span ng-if="!tabs.pools.isPoolAction(pool, 'edit')">{$ pool.description $}</span>
+                      </td>
+                      <td class="p-table__cell col-2 u-align--right" aria-label="Actions" data-ng-show="showResourcePoolActions()">
+                        <span data-ng-hide="tabs.pools.isPoolAction(pool)">
+                          <button class="p-button--base is-small u-no-margin--right" data-ng-if="canEditResourcePool(pool)" data-ng-click="tabs.pools.initiatePoolAction(pool, 'edit')">
+                            <i class="p-icon--edit">Edit</i>
+                          </button>
+                          <button class="p-button--base is-small" data-ng-hide="tabs.pools.isDefaultPool(pool)" data-ng-if="canDeleteResourcePool()" data-ng-click="tabs.pools.initiatePoolAction(pool, 'delete')">
+                            <i class="p-icon--delete">Delete</i>
+                          </button>
+                        </span>
+                      </td>
+                      <td class="is-active p-table-expanding__panel col-12" col-span="4"
+                          data-ng-if="tabs.pools.isPoolAction(pool)">
+                        <div class="row" data-ng-if="tabs.pools.isPoolAction(pool, 'edit')">
+                          <div class="col-6">
+                            <div class="p-form-group">
+                              <maas-obj-field
+                                type="textarea" key="description" label="Description" inline="true"
+                                subtle="false" input-width="12" class="u-no-margin--left field-description">
+                              </maas-obj-field>
+                            </div>
+                          </div>
+                        </div>
+                        <hr />
+                        <div class="row u-no-margin--top">
+                          <div class="col-6">
+                            <p data-ng-if="tabs.pools.actionErrorMessage">
+                              <span class="p-icon--warning">Warning:</span> {$ tabs.pools.actionErrorMessage $}
+                            </p>
+                            <p data-ng-if="!tabs.pools.actionErrorMessage && tabs.pools.isPoolAction(pool, 'delete')">
+                              Are you sure you want to remove this resource pool?
+                            </p>
+                          </div>
+                          <div class="col-6">
+                            <div class="u-align--right">
+                              <button class="p-button--base" type="button"
+                                      data-ng-click="tabs.pools.cancelPoolAction()">
+                                Cancel
+                              </button>
+                              <button class="p-button--positive" type="button"
+                                      data-ng-if="tabs.pools.isPoolAction(pool, 'edit')"
+                                      maas-obj-save>
+                                Save
+                              </button>
+                              <button class="p-button--negative" type="button"
+                                      data-ng-if="tabs.pools.isPoolAction(pool, 'delete')"
+                                      data-ng-click="tabs.pools.actionConfirmDeletePool()">
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                  </tr>
+              </tbody>
+          </table>
+        </maas-obj-form>
+    </div>
+</div>
+
+<div class="p-strip is-shallow" data-ng-if="currentpage === 'controllers'">
+    <div class="row">
         <div class="p-form-validation" data-ng-class="{ 'is-error': !tabs.controllers.searchValid }">
                 <div class="p-search-box">
                 <input
-                    type="search" placeholder="Search controllers" class="p-search-box__input p-form-validation__input"
+                    type="search" placeholder="Search" class="p-search-box__input p-form-validation__input"
                     data-ng-model="tabs.controllers.search" data-ng-change="updateFilters('controllers')"
                     data-ng-disabled="tabs.controllers.actionOption" />
                 <button type="reset" class="p-search-box__reset u-no-margin--right" alt="reset"
@@ -1164,7 +1024,6 @@ sudo maas-rack register --url {$ tabs.controllers.registerUrl $} --secret {$ tab
                     <tr class="p-table__row">
                         <th class="p-table__cell">
                             <span class="u-float--left">
-                                <!-- XXX rvba 2015-02-25 - Need to add e2e test. -->
                                 <input type="checkbox" class="u-float--none" data-ng-click="toggleCheckAll('controllers')" data-ng-checked="tabs.controllers.allViewableChecked" id="check-all-controllers" data-ng-disabled="hasActionsInProgress('controllers')" />
                                 <label for="check-all-controllers" class="p-form__label"></label>
                             </span>
@@ -1182,7 +1041,6 @@ sudo maas-rack register --url {$ tabs.controllers.registerUrl $} --secret {$ tab
                     </tr>
                 </thead>
                 <tbody vs-repeat vs-scroll-parent="window">
-                    <!-- XXX rvba 2015-02-25 - Need to add e2e test. This really needs lots of tests. -->
                     <tr class="p-table__row"
                         data-ng-repeat="controller in tabs.controllers.filtered_items = (controllers | nodesFilter:tabs.controllers.search | orderBy:tabs.controllers.predicate:tabs.controllers.reverse) track by controller.system_id"
                         data-ng-class="{ 'table--error': !supportsAction(controller, 'controllers'), 'is-active': controller.$selected }">
@@ -1203,7 +1061,7 @@ sudo maas-rack register --url {$ tabs.controllers.registerUrl $} --secret {$ tab
                             </div>
                             <div data-ng-show="!controller.version" class="u-no-margin--top" title="Unknown">
                                 Unknown
-                                <span class="p-tooltip p-tooltip--top-center">
+                                <span class="p-tooltip--top-center">
                                     <i class="p-icon--information"></i>
                                     <span class="p-tooltip__message" role="tooltip">Less than 2.3.0</span>
                                 </span>
@@ -1218,11 +1076,13 @@ sudo maas-rack register --url {$ tabs.controllers.registerUrl $} --secret {$ tab
             </table>
         </div>
     </div>
-    <div class="row ng-hide" data-ng-show="currentpage === 'switches'">
+</div>
+
+<div class="p-strip is-shallow" data-ng-if="currentpage === 'switches'">
+    <div class="row">
         <form class="p-search-box">
             <div class="p-form-validation"
                 data-ng-class="{ 'is-error': !tabs.switches.searchValid }">
-            <!-- XXX rvba 2015-02-25 - Need to add e2e test. -->
             <input
                 type="search" placeholder="Search switches"
                 class="p-search-box__input p-form-validation__input"

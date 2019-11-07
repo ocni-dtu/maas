@@ -1,5 +1,4 @@
 @mixin maas {
-
   .u-baseline-grid {
     $baseline-color: #f00 !default;
     $baseline-offset: 0 !default;
@@ -8,7 +7,13 @@
     position: relative;
 
     &::after {
-      background: linear-gradient(to top, transparentize($baseline-color, .7), transparentize($baseline-color, .7) 1px, transparent 1px, transparent);
+      background: linear-gradient(
+        to top,
+        transparentize($baseline-color, 0.7),
+        transparentize($baseline-color, 0.7) 1px,
+        transparent 1px,
+        transparent
+      );
       background-size: 100% $baseline-size;
       bottom: 0;
       content: "";
@@ -22,9 +27,9 @@
     }
 
     &__toggle {
-      bottom: $spv-inter--scaleable;
+      bottom: $spv-outer--scaleable;
       position: fixed;
-      right: $sph-inter--expanded;
+      right: $sph-outer--large;
       z-index: 101;
     }
   }
@@ -75,7 +80,8 @@
       min-height: 2rem;
     }
 
-    td, tr {
+    td,
+    tr {
       @media (max-width: $breakpoint-medium) {
         overflow-x: visible;
       }
@@ -102,15 +108,6 @@
     padding-top: 0;
   }
 
-  .p-navigation--sidebar {
-    background: $color-x-light;
-
-    .sidebar__content {
-      top: 0;
-      padding: 1rem;
-    }
-  }
-
   .sidebar__content .sidebar__second-level .is-active {
     background-position-y: 0.9rem;
   }
@@ -123,20 +120,16 @@
     max-width: none;
   }
 
-  .p-navigation--sidebar {
-    &::after {
-      background: transparent;
-    }
-    margin-bottom: $spv-inter--scaleable;
-  }
-
   .p-form__control {
     margin-top: 0;
     white-space: normal;
   }
 
   .p-form-help-text {
-    display: inline-block;
+    .p-form--stacked & {
+      margin-top: 0.1rem;
+      margin-bottom: 1.3rem !important;
+    }
   }
 
   select {
@@ -151,13 +144,12 @@
     border: 0;
   }
 
-
   .p-list-tree .p-list-tree::after {
     display: none !important;
   }
 
   .editable {
-    padding: .5rem 1rem;
+    padding: 0.5rem 1rem;
     border: 1px solid transparent;
 
     &:hover,
@@ -185,12 +177,13 @@
 
   // Sidebar selected state
   .sidebar__second-level .is-active {
-    background: transparent url('../assets/images/89c10794-remove.svg') top $sp-small right $sp-large no-repeat;
+    background: transparent url("../assets/images/89c10794-remove.svg") top
+      $sp-small right $sp-large no-repeat;
     background-size: 12px;
   }
 
   // Checkbox height is not needed
-  .p-form__control [type='checkbox'] {
+  .p-form__control [type="checkbox"] {
     height: auto;
     min-height: auto;
   }
@@ -237,23 +230,6 @@
     white-space: normal;
   }
 
-  .p-form__group {
-    .col-1:first-child,
-    .col-2:first-child,
-    .col-3:first-child,
-    .col-4:first-child,
-    .col-5:first-child,
-    .col-6:first-child,
-    .col-7:first-child,
-    .col-8:first-child,
-    .col-9:first-child,
-    .col-10:first-child,
-    .col-11:first-child,
-    .col-12:first-child {
-      margin-left: 0;
-    }
-  }
-
   .flex-row {
     display: flex;
     justify-content: space-between;
@@ -266,4 +242,72 @@
   .flex-item {
     flex: 1;
   }
+}
+
+// XXX Prevent "create new tag" showing on certain autocomplete modules
+// Issue: https://bugs.launchpad.net/maas/+bug/1823014
+.hide-create-tag-label .create-tag-label {
+  display: none;
+}
+
+// Flip chevron in hardware tests table
+.p-table--controllers-commissioning .is-active .p-icon--chevron {
+  transform: rotate(180deg);
+}
+
+// Apply text overflow ellipsis to any element
+.u-text-overflow {
+  cursor: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Default styles for maas elements e.g. <maas-obj...
+%maas-element {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+// Util to remove top border
+.u-no-border--top {
+  border-top: 0 !important;
+}
+
+// DHCP snippets table
+maas-dhcp-snippets-table {
+  @extend %maas-element;
+}
+
+.dhcp-checkbox {
+  .p-form__label {
+    float: left;
+    margin-right: 1rem;
+  }
+
+  .dhcp-checkbox__label {
+    &::before {
+      top: 0.5rem;
+    }
+
+    &::after {
+      top: 0.75rem;
+    }
+  }
+}
+
+.page-header__message {
+  margin-bottom: 1rem;
+}
+
+.p-warning-message {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.p-warning-message__icon {
+  position: absolute;
+  top: 0.2rem;
+  left: 0;
 }

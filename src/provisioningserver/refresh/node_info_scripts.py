@@ -1,25 +1,23 @@
-# Copyright 2016-2018 Canonical Ltd.  This software is licensed under the
+# Copyright 2016-2019 Canonical Ltd.  This software is licensed under the
 # GNU Affero General Public License version 3 (see the file LICENSE).
 
 """Builtin node info scripts."""
 
 __all__ = [
-    'BLOCK_DEVICES_OUTPUT_NAME',
-    'CPUINFO_OUTPUT_NAME',
-    'DHCP_EXPLORE_OUTPUT_NAME',
-    'GET_FRUID_DATA_OUTPUT_NAME',
-    'IPADDR_OUTPUT_NAME',
-    'IPADDR_OUTPUT_NAME',
-    'LIST_MODALIASES_OUTPUT_NAME',
-    'LLDP_INSTALL_OUTPUT_NAME',
-    'LLDP_OUTPUT_NAME',
-    'LSHW_OUTPUT_NAME',
-    'NODE_INFO_SCRIPTS',
-    'SERIAL_PORTS_OUTPUT_NAME',
-    'SRIOV_OUTPUT_NAME',
-    'SUPPORT_INFO_OUTPUT_NAME',
-    'VIRTUALITY_OUTPUT_NAME',
-    ]
+    "DHCP_EXPLORE_OUTPUT_NAME",
+    "GET_FRUID_DATA_OUTPUT_NAME",
+    "IPADDR_OUTPUT_NAME",
+    "KERNEL_CMDLINE_OUTPUT_NAME",
+    "LIST_MODALIASES_OUTPUT_NAME",
+    "LLDP_INSTALL_OUTPUT_NAME",
+    "LLDP_OUTPUT_NAME",
+    "LSHW_OUTPUT_NAME",
+    "LXD_OUTPUT_NAME",
+    "NODE_INFO_SCRIPTS",
+    "SERIAL_PORTS_OUTPUT_NAME",
+    "SUPPORT_INFO_OUTPUT_NAME",
+    "VIRTUALITY_OUTPUT_NAME",
+]
 
 from collections import OrderedDict
 from datetime import timedelta
@@ -32,19 +30,18 @@ from textwrap import dedent
 # which is renamed will require a migration otherwise the user will see both
 # the old name and new name as two seperate scripts. See
 # 0014_rename_dhcp_unconfigured_ifaces.py
-SUPPORT_INFO_OUTPUT_NAME = '00-maas-00-support-info'
-LSHW_OUTPUT_NAME = '00-maas-01-lshw'
-CPUINFO_OUTPUT_NAME = '00-maas-01-cpuinfo'
-VIRTUALITY_OUTPUT_NAME = '00-maas-02-virtuality'
-LLDP_INSTALL_OUTPUT_NAME = '00-maas-03-install-lldpd'
-LIST_MODALIASES_OUTPUT_NAME = '00-maas-04-list-modaliases'
-DHCP_EXPLORE_OUTPUT_NAME = '00-maas-05-dhcp-unconfigured-ifaces'
-GET_FRUID_DATA_OUTPUT_NAME = '00-maas-06-get-fruid-api-data'
-BLOCK_DEVICES_OUTPUT_NAME = '00-maas-07-block-devices'
-SERIAL_PORTS_OUTPUT_NAME = '00-maas-08-serial-ports'
-LLDP_OUTPUT_NAME = '99-maas-02-capture-lldp'
-IPADDR_OUTPUT_NAME = '99-maas-03-network-interfaces'
-SRIOV_OUTPUT_NAME = '99-maas-04-network-interfaces-with-sriov'
+SUPPORT_INFO_OUTPUT_NAME = "00-maas-00-support-info"
+LSHW_OUTPUT_NAME = "00-maas-01-lshw"
+VIRTUALITY_OUTPUT_NAME = "00-maas-02-virtuality"
+LLDP_INSTALL_OUTPUT_NAME = "00-maas-03-install-lldpd"
+LIST_MODALIASES_OUTPUT_NAME = "00-maas-04-list-modaliases"
+DHCP_EXPLORE_OUTPUT_NAME = "00-maas-05-dhcp-unconfigured-ifaces"
+GET_FRUID_DATA_OUTPUT_NAME = "00-maas-06-get-fruid-api-data"
+SERIAL_PORTS_OUTPUT_NAME = "00-maas-08-serial-ports"
+IPADDR_OUTPUT_NAME = "40-maas-01-network-interfaces"
+LXD_OUTPUT_NAME = "50-maas-01-commissioning"
+LLDP_OUTPUT_NAME = "99-maas-01-capture-lldp"
+KERNEL_CMDLINE_OUTPUT_NAME = "99-maas-05-kernel-cmdline"
 
 
 def make_function_call_script(function, *args, **kwargs):
@@ -60,7 +57,8 @@ def make_function_call_script(function, *args, **kwargs):
 
     :return: `bytes`
     """
-    template = dedent("""\
+    template = dedent(
+        """\
     #!/usr/bin/python3
     # -*- coding: utf-8 -*-
 
@@ -72,7 +70,8 @@ def make_function_call_script(function, *args, **kwargs):
         args = json.loads({function_args!r})
         kwargs = json.loads({function_kwargs!r})
         {function_name}(*args, **kwargs)
-    """)
+    """
+    )
     script = template.format(
         function_name=function.__name__,
         function_source=dedent(getsource(function)).strip(),
@@ -85,23 +84,64 @@ def make_function_call_script(function, *args, **kwargs):
 # Built-in script to run lshw. This script runs both on the controller and
 # on a commissioning machine. So the script must check itself if its running
 # within a snap.
-LSHW_SCRIPT = dedent("""\
+LSHW_SCRIPT = dedent(
+    """\
     #!/bin/bash
     if [ -z "$SNAP" ]; then
         sudo -n /usr/bin/lshw -xml
     else
         $SNAP/usr/bin/lshw -xml
     fi
-    """)
+    """
+)
+
+LXD_SCRIPT = dedent(
+    """\
+    #!/bin/bash -e
+
+    # When booting into the ephemeral environment root filesystem
+    # is the retrieved from the rack controller.
+    for i in $(cat /proc/cmdline); do
+        arg=$(echo $i | cut -d '=' -f1)
+        if [ "$arg" == "root" ]; then
+            value=$(echo $i | cut -d '=' -f2-)
+            # MAAS normally specifies the file has "filetype:url"
+            filetype=$(echo $value | cut -d ':' -f1)
+            if [ "$filetype" == "squash" ]; then
+                url=$(echo $value | cut -d ':' -f2-)
+            else
+                url=$filetype
+            fi
+            break
+        fi
+    done
+
+    # Get only the protocol, hostname, and port.
+    url=$(echo "$url" | awk -F '/' ' { print $1 "//" $3 } ')
+
+    if [ -z "$url" ] || $(echo "$url" | grep -vq "://"); then
+        echo "ERROR: Unable to find rack controller URL!"
+        exit 1
+    fi
+
+    BINARY="$(archdetect | cut -d '/' -f1 | sed 's/i386/386/g')"
+    wget $url/machine-resources/$BINARY -O $DOWNLOAD_PATH/$BINARY 1>&2
+    chmod +x $DOWNLOAD_PATH/$BINARY
+    $DOWNLOAD_PATH/$BINARY
+    """
+)
 
 # Built-in script to run `ip addr`
-IPADDR_SCRIPT = dedent("""\
+IPADDR_SCRIPT = dedent(
+    """\
     #!/bin/bash
     ip addr
-    """)
+    """
+)
 
 # Built-in script to detect virtual instances.
-VIRTUALITY_SCRIPT = dedent("""\
+VIRTUALITY_SCRIPT = dedent(
+    """\
     #!/bin/bash
     # In Bourne Shell `type -p` does not work; `which` is closest.
     if which systemd-detect-virt > /dev/null; then
@@ -117,38 +157,29 @@ VIRTUALITY_SCRIPT = dedent("""\
     else
         echo "none"
     fi
-    """)
+    """
+)
 
-CPUINFO_SCRIPT = dedent("""\
-    #!/bin/bash
-    # Gather the standard output as it has some extra info
-    lscpu
-    # Gather the machine readable output for processing
-    lscpu -p=cpu,core,socket
-    """)
-
-SERIAL_PORTS_SCRIPT = dedent("""\
+SERIAL_PORTS_SCRIPT = dedent(
+    """\
     #!/bin/bash
     find /sys/class/tty/ ! -type d -print0 2> /dev/null \
         | xargs -0 readlink -f \
         | sort -u
     # Do not fail commissioning if this fails.
     exit 0
-    """)
+    """
+)
 
-SRIOV_SCRIPT = dedent("""\
+KERNEL_CMDLINE_SCRIPT = dedent(
+    """\
     #!/bin/bash
-    for file in $(find /sys/devices/ -name sriov_numvfs); do
-        dir=$(dirname "$file")
-        for eth in $(ls "$dir/net/"); do
-            mac=`cat "$(dirname $file)/net/$eth/address"`
-            echo "$eth $mac"
-        done
-    done
-    """)
+    cat /proc/cmdline
+    """
+)
 
-SUPPORT_SCRIPT = dedent("""\
-    #!/bin/bash
+SUPPORT_SCRIPT = dedent(
+    r"""#!/bin/bash
     echo "-----BEGIN KERNEL INFO-----"
     uname -a
     echo "-----END KERNEL INFO-----"
@@ -186,8 +217,8 @@ SUPPORT_SCRIPT = dedent("""\
     fi
     echo ""
     echo "-----BEGIN MODALIASES-----"
-    find /sys -name modalias -print0 2> /dev/null | xargs -0 cat | sort \
-        | uniq -c
+    find /sys/devices/ -name modalias -print0 2> /dev/null | xargs -0 cat \
+        | sort | uniq -c
     echo "-----END MODALIASES-----"
     echo ""
     echo "-----BEGIN SERIAL PORTS-----"
@@ -217,6 +248,11 @@ SUPPORT_SCRIPT = dedent("""\
         lsblk --exclude 1,2,7 -d -P -x MAJ:MIN
         echo ""
         for dev in $(lsblk -n --exclude 1,2,7 --output KNAME); do
+            if [ ! -e "/dev/$dev" ]; then
+                # disk devices are not present in LXD containers
+                echo "$dev device node not found, skipping"
+                continue
+            fi
             echo "$dev:"
             udevadm info -q all -n $dev
             size64="$(blockdev --getsize64 /dev/$dev 2> /dev/null || echo ?)"
@@ -227,8 +263,11 @@ SUPPORT_SCRIPT = dedent("""\
         done
         echo ""
         # Enumerate the mappings that were generated (by device).
-        find /dev/disk -type l | xargs ls -ln | awk '{ print $9, $10, $11 }' \
-            | sort -k2
+        # (/dev/disk is not present in LXD containers, so skip in that case)
+        if [ -d /dev/disk ]; then
+            find /dev/disk -type l | xargs ls -ln \
+                | awk '{ print $9, $10, $11 }' | sort -k2
+        fi
         echo "-----END DETAILED BLOCK DEVICE INFO-----"
     fi
     if [ -x "$(which dmidecode)" ]; then
@@ -274,7 +313,8 @@ SUPPORT_SCRIPT = dedent("""\
     fi
     # Do not fail commissioning if this fails.
     exit 0
-    """)
+    """
+)
 
 
 # Run `dhclient` on all the unconfigured interfaces.
@@ -287,22 +327,23 @@ def dhcp_explore():
 
     def get_iface_list(ifconfig_output):
         return [
-            line.split()[1].split(b':')[0].split(b'@')[0]
-            for line in ifconfig_output.splitlines()]
+            line.split()[1].split(b":")[0].split(b"@")[0]
+            for line in ifconfig_output.splitlines()
+        ]
 
     def has_ipv4_address(iface):
-        output = check_output(('ip', '-4', 'addr', 'list', 'dev', iface))
+        output = check_output(("ip", "-4", "addr", "list", "dev", iface))
         for line in output.splitlines():
-            if line.find(b' inet ') >= 0:
+            if line.find(b" inet ") >= 0:
                 return True
         return False
 
     def has_ipv6_address(iface):
         no_ipv6_found = True
-        output = check_output(('ip', '-6', 'addr', 'list', 'dev', iface))
+        output = check_output(("ip", "-6", "addr", "list", "dev", iface))
         for line in output.splitlines():
-            if line.find(b' inet6 ') >= 0:
-                if line.find(b' inet6 fe80:') == -1:
+            if line.find(b" inet6 ") >= 0:
+                if line.find(b" inet6 fe80:") == -1:
                     return True
                 no_ipv6_found = False
         # Bug 1640147: If there is no IPv6 address, then we consider this to be
@@ -310,12 +351,15 @@ def dhcp_explore():
         return no_ipv6_found
 
     all_ifaces = get_iface_list(check_output(("ip", "-o", "link", "show")))
-    configured_ifaces = get_iface_list(check_output(
-        ("ip", "-o", "link", "show", "up")))
+    configured_ifaces = get_iface_list(
+        check_output(("ip", "-o", "link", "show", "up"))
+    )
     configured_ifaces_4 = [
-        iface for iface in configured_ifaces if has_ipv4_address(iface)]
+        iface for iface in configured_ifaces if has_ipv4_address(iface)
+    ]
     configured_ifaces_6 = [
-        iface for iface in configured_ifaces if has_ipv6_address(iface)]
+        iface for iface in configured_ifaces if has_ipv6_address(iface)
+    ]
     unconfigured_ifaces_4 = set(all_ifaces) - set(configured_ifaces_4)
     unconfigured_ifaces_6 = set(all_ifaces) - set(configured_ifaces_6)
     # Run dhclient in the background to avoid blocking node_info.  We need to
@@ -329,11 +373,15 @@ def dhcp_explore():
     for iface in sorted(unconfigured_ifaces_4):
         call(["dhclient", "-nw", "-4", iface])
     for iface in sorted(unconfigured_ifaces_6):
-        iface_str = iface.decode('utf-8')
-        Popen([
-            "sh", "-c",
-            "for idx in $(seq 10); do"
-            " dhclient -6 %s && break || sleep 10; done" % iface_str])
+        iface_str = iface.decode("utf-8")
+        Popen(
+            [
+                "sh",
+                "-c",
+                "for idx in $(seq 10); do"
+                " dhclient -6 %s && break || sleep 10; done" % iface_str,
+            ]
+        )
         # Ignore return value and continue running dhclient on the
         # other interfaces.
 
@@ -375,11 +423,12 @@ def lldpd_install(config_file):
     """
     from subprocess import check_call
     from codecs import open
+
     with open(config_file, "a", "ascii") as fd:
-        fd.write('\n')  # Ensure there's a newline.
-        fd.write('# Configured by MAAS:\n')
+        fd.write("\n")  # Ensure there's a newline.
+        fd.write("# Configured by MAAS:\n")
         fd.write('DAEMON_ARGS="-c -f -s -e -r"\n')
-    check_call(('systemctl', 'restart', 'lldpd'))
+    check_call(("systemctl", "restart", "lldpd"))
 
 
 # This function must be entirely self-contained. It must not use
@@ -394,6 +443,7 @@ def lldpd_capture(reference_file, time_delay):
     from os.path import getmtime
     from time import sleep, time
     from subprocess import check_call
+
     time_ref = getmtime(reference_file)
     time_remaining = time_ref + time_delay - time()
     if time_remaining > 0:
@@ -405,13 +455,16 @@ def lldpd_capture(reference_file, time_delay):
     check_call(("lldpctl", "-f", "xml"))
 
 
-LIST_MODALIASES_SCRIPT = dedent("""\
+LIST_MODALIASES_SCRIPT = dedent(
+    """\
     #!/bin/bash
-    find /sys -name modalias -print0 | xargs -0 cat | sort -u
-    """)
+    find /sys/devices/ -name modalias -print0 | xargs -0 cat | sort -u
+    """
+)
 
 
-GET_FRUID_DATA_SCRIPT = dedent("""\
+GET_FRUID_DATA_SCRIPT = dedent(
+    """\
     #!/bin/bash -x
     # Wait for interfaces to settle and get their IPs after the DHCP job.
     sleep 5
@@ -423,179 +476,8 @@ GET_FRUID_DATA_SCRIPT = dedent("""\
     done
     # Do not fail commissioning if this fails.
     exit 0
-    """)
-
-
-def gather_physical_block_devices(dev_disk_byid='/dev/disk/by-id/'):
-    """Gathers information about a nodes physical block devices.
-
-    The following commands are ran in order to gather the required information.
-
-    lsblk       Gathers the initial block devices not including slaves or
-                holders. Gets the name, read-only, removable, model, and
-                if rotary.
-
-    udevadm     Grabs the device path, serial number, if connected over
-                SATA and rotational speed.
-
-    blockdev    Grabs the block size and size of the disk in bytes.
-
     """
-    import json
-    import os
-    import shlex
-    import sys
-    from subprocess import check_output
-
-    import yaml
-
-    # XXX: Set LC_* and LANG environment variables to C.UTF-8 explicitly.
-
-    def _path_to_idpath(path):
-        """Searches dev_disk_byid for a device symlinked to /dev/[path]"""
-        if os.path.exists(dev_disk_byid):
-            for link in os.listdir(dev_disk_byid):
-                if os.path.exists(path) and os.path.samefile(
-                        os.path.join(dev_disk_byid, link), path):
-                    return os.path.join(dev_disk_byid, link)
-        return None
-
-    running_dir = os.path.dirname(__file__)
-    # Results are stored differently when being run as part of node
-    # commissioning vs controller refresh.
-    virtuality_result_paths = [
-        os.path.join(running_dir, '..', '..', 'out', '00-maas-02-virtuality'),
-        os.path.join(running_dir, 'out', '00-maas-02-virtuality'),
-    ]
-    # This script doesn't work in containers as they don't have any block
-    # device. If the virtuality script detected its in one don't report
-    # anything.
-    for virtuality_result_path in virtuality_result_paths:
-        if not os.path.exists(virtuality_result_path):
-            continue
-        virtuality_result = open(virtuality_result_path, 'r').read().strip()
-        # Names from man SYSTEMD-DETECT-VIRT(1)
-        if virtuality_result in {
-                'openvz', 'lxc', 'lxc-libvirt', 'systemd-nspawn', 'docker',
-                'rkt'}:
-            print(
-                'Unable to detect block devices while running in container!',
-                file=sys.stderr)
-            print('[]')
-            result_path = os.environ.get('RESULT_PATH')
-            if result_path is not None:
-                with open(result_path, 'w') as results_file:
-                    yaml.safe_dump({'status': 'skipped'}, results_file)
-            return
-
-    # Grab the block devices from lsblk. Excludes RAM devices
-    # (default for lsblk), floppy disks, and loopback devices.
-    blockdevs = []
-    block_list = check_output((
-        "lsblk", "--exclude", "1,2,7", "-d", "-P",
-        "-o", "NAME,RO,RM,MODEL,ROTA,MAJ:MIN"))
-    block_list = block_list.decode("utf-8")
-    for blockdev in block_list.splitlines():
-        tokens = shlex.split(blockdev)
-        current_block = {}
-        for token in tokens:
-            k, v = token.split("=", 1)
-            current_block[k] = v.strip()
-        blockdevs.append(current_block)
-
-    # Sort drives by MAJ:MIN so MAAS picks the correct boot drive.
-    # lsblk -x MAJ:MIN can't be used as the -x flag only appears in
-    # lsblk 2.71.1 or newer which is unavailable on Trusty. See LP:1673724
-    blockdevs = sorted(
-        blockdevs,
-        key=lambda blockdev: [int(i) for i in blockdev['MAJ:MIN'].split(':')])
-
-    # Grab the device path, serial number, and sata connection.
-    UDEV_MAPPINGS = {
-        "DEVNAME": "PATH",
-        "DEVPATH": "DEVPATH",
-        "ID_SERIAL_SHORT": "SERIAL",
-        "ID_ATA_SATA": "SATA",
-        "ID_ATA_ROTATION_RATE_RPM": "RPM",
-        "ID_REVISION": "FIRMWARE_VERSION",
-        }
-    del_blocks = set()
-    seen_devices = set()
-    for block_info in blockdevs:
-        # Some RAID devices return the name of the device seperated with "!",
-        # but udevadm expects it to be a "/".
-        block_name = block_info["NAME"].replace("!", "/")
-        udev_info = check_output(
-            ("udevadm", "info", "-q", "all", "-n", block_name))
-        udev_info = udev_info.decode("utf-8")
-        for info_line in udev_info.splitlines():
-            info_line = info_line.strip()
-            if info_line == "":
-                continue
-            _, info = info_line.split(" ", 1)
-            if "=" not in info:
-                continue
-            k, v = info.split("=", 1)
-            if k in UDEV_MAPPINGS:
-                block_info[UDEV_MAPPINGS[k]] = v.strip()
-            if k == "ID_CDROM" and v == "1":
-                # Remove any type of CDROM from the blockdevs, as we
-                # cannot use this device for installation.
-                del_blocks.add(block_name)
-                break
-
-        # If the udevadm does not know the firmware version of an NVME drive
-        # try to read it from /sys
-        if "ID_REVISION" not in block_info and "nvme" in block_info["NAME"]:
-            firmware_ver_path = os.path.join(
-                "/sys", block_info.get("DEVPATH", ""), "..", "firmware_rev")
-            if os.path.exists(firmware_ver_path):
-                block_info["FIRMWARE_VERSION"] = open(
-                    firmware_ver_path, 'r').read().strip()
-
-        if block_name in del_blocks:
-            continue
-
-        # Skip duplicate (serial, model) for multipath.
-        serial = block_info.get("SERIAL")
-        if serial:
-            model = block_info.get("MODEL", "").strip()
-            if (serial, model) in seen_devices:
-                del_blocks.add(block_name)
-                continue
-            seen_devices.add((serial, model))
-
-    # Remove any devices that need to be removed.
-    blockdevs = [
-        block_info
-        for block_info in blockdevs
-        if block_info["NAME"] not in del_blocks
-        ]
-
-    # Grab the size of the device, block size and id-path.
-    for block_info in blockdevs:
-        block_path = block_info["PATH"]
-        id_path = _path_to_idpath(block_path)
-        if id_path is not None:
-            block_info["ID_PATH"] = id_path
-        # This code runs on a commissioning machine and on a controller. So
-        # the code must check itself if its being ran inside of a snap.
-        if 'SNAP' in os.environ:
-            device_size = check_output(
-                ("blockdev", "--getsize64", block_path))
-            device_block_size = check_output(
-                ("blockdev", "--getbsz", block_path))
-        else:
-            device_size = check_output(
-                ("sudo", "-n", "blockdev", "--getsize64", block_path))
-            device_block_size = check_output(
-                ("sudo", "-n", "blockdev", "--getbsz", block_path))
-        block_info["SIZE"] = device_size.decode("utf-8").strip()
-        block_info["BLOCK_SIZE"] = device_block_size.decode("utf-8").strip()
-
-    # Output block device information in json
-    json_output = json.dumps(blockdevs, indent=True)
-    print(json_output)  # json_outout is ASCII-only.
+)
 
 
 def null_hook(node, output, exit_status):
@@ -604,6 +486,7 @@ def null_hook(node, output, exit_status):
     Use this to explicitly ignore the response from a built-in
     node info script.
     """
+
 
 # Built-in node info scripts.  These go into the commissioning tarball
 # together with user-provided commissioning scripts or are executed by the
@@ -626,89 +509,124 @@ def null_hook(node, output, exit_status):
 #
 # maasserver/status_monitor.py adds 1 minute to the timeout of all scripts for
 # cleanup and signaling.
-NODE_INFO_SCRIPTS = OrderedDict([
-    (SUPPORT_INFO_OUTPUT_NAME, {
-        'content': SUPPORT_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(minutes=5),
-        'run_on_controller': True,
-    }),
-    (LSHW_OUTPUT_NAME, {
-        'content': LSHW_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(minutes=5),
-        'run_on_controller': True,
-    }),
-    (CPUINFO_OUTPUT_NAME, {
-        'content': CPUINFO_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(seconds=10),
-        'run_on_controller': True,
-    }),
-    (VIRTUALITY_OUTPUT_NAME, {
-        'content': VIRTUALITY_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(seconds=10),
-        'run_on_controller': True,
-    }),
-    (LLDP_INSTALL_OUTPUT_NAME, {
-        'content': make_function_call_script(
-            lldpd_install, config_file="/etc/default/lldpd"),
-        'hook': null_hook,
-        'packages': {'apt': ['lldpd']},
-        'timeout': timedelta(minutes=10),
-        'run_on_controller': False,
-    }),
-    (LIST_MODALIASES_OUTPUT_NAME, {
-        'content': LIST_MODALIASES_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(seconds=10),
-        'run_on_controller': True,
-    }),
-    (DHCP_EXPLORE_OUTPUT_NAME, {
-        'content': make_function_call_script(dhcp_explore),
-        'hook': null_hook,
-        'timeout': timedelta(minutes=5),
-        'run_on_controller': False,
-    }),
-    (GET_FRUID_DATA_OUTPUT_NAME, {
-        'content': GET_FRUID_DATA_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(minutes=1),
-        'run_on_controller': False,
-    }),
-    (BLOCK_DEVICES_OUTPUT_NAME, {
-        'content': make_function_call_script(gather_physical_block_devices),
-        'hook': null_hook,
-        'timeout': timedelta(minutes=5),
-        'run_on_controller': True,
-    }),
-    (SERIAL_PORTS_OUTPUT_NAME, {
-        'content': SERIAL_PORTS_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(seconds=10),
-        'run_on_controller': True,
-    }),
-    (LLDP_OUTPUT_NAME, {
-        'content': make_function_call_script(
-            lldpd_capture, "/var/run/lldpd.socket", time_delay=60),
-        'hook': null_hook,
-        'timeout': timedelta(minutes=3),
-        'run_on_controller': False,
-    }),
-    (IPADDR_OUTPUT_NAME, {
-        'content': IPADDR_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(seconds=10),
-        'run_on_controller': False,
-    }),
-    (SRIOV_OUTPUT_NAME, {
-        'content': SRIOV_SCRIPT.encode('ascii'),
-        'hook': null_hook,
-        'timeout': timedelta(seconds=10),
-        'run_on_controller': False,
-    }),
-])
+NODE_INFO_SCRIPTS = OrderedDict(
+    [
+        (
+            SUPPORT_INFO_OUTPUT_NAME,
+            {
+                "content": SUPPORT_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(minutes=5),
+                "run_on_controller": True,
+            },
+        ),
+        (
+            LSHW_OUTPUT_NAME,
+            {
+                "content": LSHW_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(minutes=5),
+                "run_on_controller": True,
+            },
+        ),
+        (
+            LXD_OUTPUT_NAME,
+            {
+                "content": LXD_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "packages": {"apt": ["archdetect-deb"]},
+                "timeout": timedelta(minutes=1),
+                "run_on_controller": True,
+            },
+        ),
+        (
+            VIRTUALITY_OUTPUT_NAME,
+            {
+                "content": VIRTUALITY_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(seconds=10),
+                "run_on_controller": True,
+            },
+        ),
+        (
+            LLDP_INSTALL_OUTPUT_NAME,
+            {
+                "content": make_function_call_script(
+                    lldpd_install, config_file="/etc/default/lldpd"
+                ),
+                "hook": null_hook,
+                "packages": {"apt": ["lldpd"]},
+                "timeout": timedelta(minutes=10),
+                "run_on_controller": False,
+            },
+        ),
+        (
+            LIST_MODALIASES_OUTPUT_NAME,
+            {
+                "content": LIST_MODALIASES_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(seconds=10),
+                "run_on_controller": True,
+            },
+        ),
+        (
+            DHCP_EXPLORE_OUTPUT_NAME,
+            {
+                "content": make_function_call_script(dhcp_explore),
+                "hook": null_hook,
+                "timeout": timedelta(minutes=5),
+                "run_on_controller": False,
+            },
+        ),
+        (
+            GET_FRUID_DATA_OUTPUT_NAME,
+            {
+                "content": GET_FRUID_DATA_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(minutes=1),
+                "run_on_controller": False,
+            },
+        ),
+        (
+            KERNEL_CMDLINE_OUTPUT_NAME,
+            {
+                "content": KERNEL_CMDLINE_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(seconds=10),
+                "run_on_controller": False,
+            },
+        ),
+        (
+            SERIAL_PORTS_OUTPUT_NAME,
+            {
+                "content": SERIAL_PORTS_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(seconds=10),
+                "run_on_controller": True,
+            },
+        ),
+        (
+            LLDP_OUTPUT_NAME,
+            {
+                "content": make_function_call_script(
+                    lldpd_capture, "/var/run/lldpd.socket", time_delay=60
+                ),
+                "hook": null_hook,
+                "timeout": timedelta(minutes=3),
+                "run_on_controller": False,
+            },
+        ),
+        (
+            IPADDR_OUTPUT_NAME,
+            {
+                "content": IPADDR_SCRIPT.encode("ascii"),
+                "hook": null_hook,
+                "timeout": timedelta(seconds=10),
+                "run_on_controller": False,
+            },
+        ),
+    ]
+)
 
 
 def add_names_to_scripts(scripts):
